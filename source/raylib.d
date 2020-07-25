@@ -360,7 +360,7 @@ struct Mesh
 struct Shader
 {
     uint id; // Shader program id
-    int[MAX_SHADER_LOCATIONS] locs; // Shader locations array
+    int* locs; // Shader locations array
 }
 
 // Material texture map
@@ -375,7 +375,7 @@ struct MaterialMap
 struct Material
 {
     Shader shader; // Material shader
-    MaterialMap[MAX_MATERIAL_MAPS] maps; // Material maps
+    MaterialMap* maps; // Material maps
     float* params; // Material generic parameters (if required)
 }
 
