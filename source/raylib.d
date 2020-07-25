@@ -955,6 +955,7 @@ int GetMonitorHeight(int monitor); // Get primary monitor height
 int GetMonitorPhysicalWidth(int monitor); // Get primary monitor physical width in millimetres
 int GetMonitorPhysicalHeight(int monitor); // Get primary monitor physical height in millimetres
 Vector2 GetWindowPosition(); // Get window position XY on monitor
+Vector2 GetWindowScaleDPI (); // Get window scale DPI factor
 const(char)* GetMonitorName(int monitor); // Get the human-readable, UTF-8 encoded name of the primary monitor
 const(char)* GetClipboardText(); // Get clipboard text content
 void SetClipboardText(const(char)* text); // Set clipboard text content
