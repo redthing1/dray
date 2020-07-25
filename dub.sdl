@@ -1,0 +1,7 @@
+name "dray"
+description "raylib bindings for dlang"
+authors "xdrie"
+copyright "Copyright (c) 2013-2020 Ramon Santamaria (@raysan5), Copyright © 2020, xdrie"
+license "apache-2.0"
+targetType "library"
+libs "raylib"

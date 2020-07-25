@@ -1,0 +1,6 @@
+name "example"
+description "dray example"
+authors "xdrie"
+copyright "Copyright © 2020, xdrie"
+license "proprietary"
+dependencies "dray" path=".."
