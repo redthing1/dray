@@ -10,7 +10,8 @@ some minor changes are included:
 
 ## usage
 
-all you need to do is add this package as a dependency and it should automatically build the C library and link it in.
+all you need to do is add this package as a dependency and it should automatically build the Raylib C library and link it in.
+if for some reason you want to use a custom build, just place your own `libraylib.a` in the package root (usually something like `~/.dub/packages/dray_xxx`.
 
 note that `raylib` has some of its own dependencies such as OpenGL.
 
