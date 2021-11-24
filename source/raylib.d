@@ -87,6 +87,7 @@ public
 
 import core.stdc.config;
 import core.stdc.stdarg;
+import core.stdc.stdlib;
 
 extern (C) @nogc nothrow:
 
@@ -120,21 +121,6 @@ alias RL_CALLOC = calloc;
 alias RL_REALLOC = realloc;
 
 alias RL_FREE = free;
-
-// NOTE: MSVC C++ compiler does not support compound literals (C99 feature)
-// Plain structures in C++ (without constructors) can be initialized with { }
-
-extern (D) auto CLITERAL(T)(auto ref T type)
-{
-    return type;
-}
-
-// NOTE: We set some defines with some data types declared by raylib
-// Other modules (raymath, rlgl) also require some of those types, so,
-// to be able to use those other modules as standalone (not depending on raylib)
-// this defines are very useful for internal check and avoid type (re)definitions
-
-alias CLITERAL = Color;
 
 enum Colors {
     // Some Basic Colors
