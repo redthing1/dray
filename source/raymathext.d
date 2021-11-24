@@ -131,12 +131,12 @@ Vector2 rotate(Vector2 v, float angle)
     return Vector2(v.x * cos(angle) - v.y * sin(angle), v.x * sin(angle) + v.y * cos(angle));
 }
 
-Vector2 slide(Vector2 v, Vector2 along)
-{
-    return along.normal * dot(v, along);
-}
+// Vector2 slide(Vector2 v, Vector2 along)
+// {
+//     return along.normal * dot(v, along);
+// }
 
-Vector3 transform(Vector3 v, Matrix4 mat)
+Vector3 transform(Vector3 v, Matrix mat)
 {
     with (v) with (mat)
         return Vector3(
