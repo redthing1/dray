@@ -164,6 +164,7 @@ struct Vector2
 {
     float x; // Vector x component
     float y; // Vector y component
+    mixin Linear;
 }
 
 // Vector3, 3 components
@@ -172,6 +173,7 @@ struct Vector3
     float x; // Vector x component
     float y; // Vector y component
     float z; // Vector z component
+    mixin Linear;
 }
 
 // Vector4, 4 components
@@ -181,6 +183,7 @@ struct Vector4
     float y; // Vector y component
     float z; // Vector z component
     float w; // Vector w component
+    mixin Linear;
 }
 
 // Quaternion, 4 components (Vector4 alias)
@@ -205,7 +208,9 @@ struct Matrix
     float m7;
     float m11;
     float m15; // Matrix fourth row (4 components)
+    mixin Linear;
 }
+alias Matrix4 = Matrix;
 
 // Color, 4 components, R8G8B8A8 (32bit)
 struct Color
@@ -219,10 +224,13 @@ struct Color
 // Rectangle, 4 components
 struct Rectangle
 {
+
     float x; // Rectangle top-left corner position x
     float y; // Rectangle top-left corner position y
     float width; // Rectangle width
     float height; // Rectangle height
+    alias w = width;
+    alias h = height;
 }
 
 // Image, pixel data stored in CPU memory (RAM)

@@ -106,11 +106,6 @@ unittest
     Assert.equal(Vector2.one.length, sqrt(2.0f));
 }
 
-unittest
-{
-    Assert.equal(Rotor3(1, 2, 3, 4), Rotor3(1, Bivector3(2, 3, 4)));
-}
-
 /// Mix `amount` of `lhs` with `1-amount` of `rhs`
 ///   `amount` should be between 0 and 1, but can be anything
 ///   lerp(lhs, rhs, 0) == lhs
@@ -131,10 +126,10 @@ Vector2 rotate(Vector2 v, float angle)
     return Vector2(v.x * cos(angle) - v.y * sin(angle), v.x * sin(angle) + v.y * cos(angle));
 }
 
-// Vector2 slide(Vector2 v, Vector2 along)
-// {
-//     return along.normal * dot(v, along);
-// }
+Vector2 slide(Vector2 v, Vector2 along)
+{
+    return along.normal * dot(v, along);
+}
 
 Vector3 transform(Vector3 v, Matrix mat)
 {

@@ -17,6 +17,7 @@ raylib_source
 
 # Executables
 *.exe
+*-test-library
 
 # DUB
 .dub
