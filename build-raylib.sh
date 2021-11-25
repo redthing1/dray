@@ -5,7 +5,7 @@ cd "$DIR"
 if [ ! -f libraylib.a ] || [ "$1" == "-f" ]; then
     echo "[dray] Building Raylib static library..."
 
-    # rm -rf raylib_source
+    rm -rf raylib_source
     git clone https://github.com/xdrie/raylib.git raylib_source
     cd raylib_source
     git checkout 4.0.0_patch
