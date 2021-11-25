@@ -162,27 +162,27 @@ enum Colors {
 // Vector2, 2 components
 struct Vector2
 {
-    float x; // Vector x component
-    float y; // Vector y component
+    float x = 0; // Vector x component
+    float y = 0; // Vector y component
     mixin Linear;
 }
 
 // Vector3, 3 components
 struct Vector3
 {
-    float x; // Vector x component
-    float y; // Vector y component
-    float z; // Vector z component
+    float x = 0; // Vector x component
+    float y = 0; // Vector y component
+    float z = 0; // Vector z component
     mixin Linear;
 }
 
 // Vector4, 4 components
 struct Vector4
 {
-    float x; // Vector x component
-    float y; // Vector y component
-    float z; // Vector z component
-    float w; // Vector w component
+    float x = 0; // Vector x component
+    float y = 0; // Vector y component
+    float z = 0; // Vector z component
+    float w = 0; // Vector w component
     mixin Linear;
 }
 
@@ -192,22 +192,22 @@ alias Quaternion = Vector4;
 // Matrix, 4x4 components, column major, OpenGL style, right handed
 struct Matrix
 {
-    float m0;
-    float m4;
-    float m8;
-    float m12; // Matrix first row (4 components)
-    float m1;
-    float m5;
-    float m9;
-    float m13; // Matrix second row (4 components)
-    float m2;
-    float m6;
-    float m10;
-    float m14; // Matrix third row (4 components)
-    float m3;
-    float m7;
-    float m11;
-    float m15; // Matrix fourth row (4 components)
+    float m0 = 0;
+    float m4 = 0;
+    float m8 = 0;
+    float m12 = 0; // Matrix first row (4 components)
+    float m1 = 0;
+    float m5 = 0;
+    float m9 = 0;
+    float m13 = 0; // Matrix second row (4 components)
+    float m2 = 0;
+    float m6 = 0;
+    float m10 = 0;
+    float m14 = 0; // Matrix third row (4 components)
+    float m3 = 0;
+    float m7 = 0;
+    float m11 = 0;
+    float m15 = 0; // Matrix fourth row (4 components)
     mixin Linear;
 }
 alias Matrix4 = Matrix;
