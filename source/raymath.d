@@ -43,7 +43,7 @@ import raylib;
 *
 **********************************************************************************************/
 
-extern (C) @nogc nothrow:
+extern (D) @nogc nothrow:
 
 //#define RAYMATH_STANDALONE      // NOTE: To use raymath as standalone lib, just uncomment this line
 //#define RAYMATH_HEADER_ONLY     // NOTE: To compile functions as static inline, uncomment this line
