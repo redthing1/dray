@@ -1,8 +1,6 @@
-module raygui;
-
 /*******************************************************************************************
 *
-*   raygui v2.8 - A simple and easy-to-use immediate-mode gui library
+*   raygui v3.2 - A simple and easy-to-use immediate-mode gui library
 *
 *   DESCRIPTION:
 *
@@ -12,17 +10,16 @@ module raygui;
 *   Controls provided:
 *
 *   # Container/separators Controls
-*       - WindowBox
-*       - GroupBox
+*       - WindowBox     --> StatusBar, Panel
+*       - GroupBox      --> Line
 *       - Line
-*       - Panel
+*       - Panel         --> StatusBar
+*       - ScrollPanel   --> StatusBar
 *
 *   # Basic Controls
 *       - Label
 *       - Button
 *       - LabelButton   --> Label
-*       - ImageButton   --> Button
-*       - ImageButtonEx --> Button
 *       - Toggle
 *       - ToggleGroup   --> Toggle
 *       - CheckBox
@@ -36,8 +33,6 @@ module raygui;
 *       - SliderBar     --> Slider
 *       - ProgressBar
 *       - StatusBar
-*       - ScrollBar
-*       - ScrollPanel
 *       - DummyRec
 *       - Grid
 *
@@ -49,6 +44,52 @@ module raygui;
 *
 *   It also provides a set of functions for styling the controls based on its properties (size, color).
 *
+*
+*   RAYGUI STYLE (guiStyle):
+*
+*   raygui uses a global data array for all gui style properties (allocated on data segment by default),
+*   when a new style is loaded, it is loaded over the global style... but a default gui style could always be
+*   recovered with GuiLoadStyleDefault() function, that overwrites the current style to the default one
+*
+*   The global style array size is fixed and depends on the number of controls and properties:
+*
+*       static unsigned int guiStyle[RAYGUI_MAX_CONTROLS*(RAYGUI_MAX_PROPS_BASE + RAYGUI_MAX_PROPS_EXTENDED)];
+*
+*   guiStyle size is by default: 16*(16 + 8) = 384*4 = 1536 bytes = 1.5 KB
+*
+*   Note that the first set of BASE properties (by default guiStyle[0..15]) belong to the generic style
+*   used for all controls, when any of those base values is set, it is automatically populated to all
+*   controls, so, specific control values overwriting generic style should be set after base values.
+*
+*   After the first BASE set we have the EXTENDED properties (by default guiStyle[16..23]), those
+*   properties are actually common to all controls and can not be overwritten individually (like BASE ones)
+*   Some of those properties are: TEXT_SIZE, TEXT_SPACING, LINE_COLOR, BACKGROUND_COLOR
+*
+*   Custom control properties can be defined using the EXTENDED properties for each independent control.
+*
+*   TOOL: rGuiStyler is a visual tool to customize raygui style.
+*
+*
+*   RAYGUI ICONS (guiIcons):
+*
+*   raygui could use a global array containing icons data (allocated on data segment by default),
+*   a custom icons set could be loaded over this array using GuiLoadIcons(), but loaded icons set
+*   must be same RAYGUI_ICON_SIZE and no more than RAYGUI_ICON_MAX_ICONS will be loaded
+*
+*   Every icon is codified in binary form, using 1 bit per pixel, so, every 16x16 icon
+*   requires 8 integers (16*16/32) to be stored in memory.
+*
+*   When the icon is draw, actually one quad per pixel is drawn if the bit for that pixel is set.
+*
+*   The global icons array size is fixed and depends on the number of icons and size:
+*
+*       static unsigned int guiIcons[RAYGUI_ICON_MAX_ICONS*RAYGUI_ICON_DATA_ELEMENTS];
+*
+*   guiIcons size is by default: 256*(16*16/32) = 2048*4 = 8192 bytes = 8 KB
+*
+*   TOOL: rGuiIcons is a visual tool to customize raygui icons.
+*
+*
 *   CONFIGURATION:
 *
 *   #define RAYGUI_IMPLEMENTATION
@@ -56,48 +97,71 @@ module raygui;
 *       If not defined, the library is in header only mode and can be included in other headers
 *       or source files without problems. But only ONE file should hold the implementation.
 *
-*   #define RAYGUI_STATIC (defined by default)
-*       The generated implementation will stay private inside implementation file and all
-*       internal symbols and functions will only be visible inside that file.
-*
 *   #define RAYGUI_STANDALONE
 *       Avoid raylib.h header inclusion in this file. Data types defined on raylib are defined
 *       internally in the library and input management and drawing functions must be provided by
 *       the user (check library implementation for further details).
 *
-*   #define RAYGUI_SUPPORT_ICONS
-*       Includes riconsdata.h header defining a set of 128 icons (binary format) to be used on
-*       multiple controls and following raygui styles
+*   #define RAYGUI_NO_ICONS
+*       Avoid including embedded ricons data (256 icons, 16x16 pixels, 1-bit per pixel, 2KB)
+*
+*   #define RAYGUI_CUSTOM_ICONS
+*       Includes custom ricons.h header defining a set of custom icons,
+*       this file can be generated using rGuiIcons tool
 *
 *
 *   VERSIONS HISTORY:
+*       3.2 (22-May-2022) RENAMED: Some enum values, for unification, avoiding prefixes
+*                         REMOVED: GuiScrollBar(), only internal
+*                         REDESIGNED: GuiPanel() to support text parameter
+*                         REDESIGNED: GuiScrollPanel() to support text parameter
+*                         REDESIGNED: GuiColorPicker() to support text parameter
+*                         REDESIGNED: GuiColorPanel() to support text parameter
+*                         REDESIGNED: GuiColorBarAlpha() to support text parameter
+*                         REDESIGNED: GuiColorBarHue() to support text parameter
+*                         REDESIGNED: GuiTextInputBox() to support password
+*       3.1 (12-Jan-2022) REVIEWED: Default style for consistency (aligned with rGuiLayout v2.5 tool)
+*                         REVIEWED: GuiLoadStyle() to support compressed font atlas image data and unload previous textures
+*                         REVIEWED: External icons usage logic
+*                         REVIEWED: GuiLine() for centered alignment when including text
+*                         RENAMED: Multiple controls properties definitions to prepend RAYGUI_
+*                         RENAMED: RICON_ references to RAYGUI_ICON_ for library consistency
+*                         Projects updated and multiple tweaks
+*       3.0 (04-Nov-2021) Integrated ricons data to avoid external file
+*                         REDESIGNED: GuiTextBoxMulti()
+*                         REMOVED: GuiImageButton*()
+*                         Multiple minor tweaks and bugs corrected
+*       2.9 (17-Mar-2021) REMOVED: Tooltip API
 *       2.8 (03-May-2020) Centralized rectangles drawing to GuiDrawRectangle()
-*       2.7 (20-Feb-2020) Added possible tooltips API
+*       2.7 (20-Feb-2020) ADDED: Possible tooltips API
 *       2.6 (09-Sep-2019) ADDED: GuiTextInputBox()
 *                         REDESIGNED: GuiListView*(), GuiDropdownBox(), GuiSlider*(), GuiProgressBar(), GuiMessageBox()
 *                         REVIEWED: GuiTextBox(), GuiSpinner(), GuiValueBox(), GuiLoadStyle()
 *                         Replaced property INNER_PADDING by TEXT_PADDING, renamed some properties
-*                         Added 8 new custom styles ready to use
+*                         ADDED: 8 new custom styles ready to use
 *                         Multiple minor tweaks and bugs corrected
 *       2.5 (28-May-2019) Implemented extended GuiTextBox(), GuiValueBox(), GuiSpinner()
-*       2.3 (29-Apr-2019) Added rIcons auxiliar library and support for it, multiple controls reviewed
+*       2.3 (29-Apr-2019) ADDED: rIcons auxiliar library and support for it, multiple controls reviewed
 *                         Refactor all controls drawing mechanism to use control state
-*       2.2 (05-Feb-2019) Added GuiScrollBar(), GuiScrollPanel(), reviewed GuiListView(), removed Gui*Ex() controls
-*       2.1 (26-Dec-2018) Redesign of GuiCheckBox(), GuiComboBox(), GuiDropdownBox(), GuiToggleGroup() > Use combined text string
-*                         Complete redesign of style system (breaking change)
-*       2.0 (08-Nov-2018) Support controls guiLock and custom fonts, reviewed GuiComboBox(), GuiListView()...
-*       1.9 (09-Oct-2018) Controls review: GuiGrid(), GuiTextBox(), GuiTextBoxMulti(), GuiValueBox()...
+*       2.2 (05-Feb-2019) ADDED: GuiScrollBar(), GuiScrollPanel(), reviewed GuiListView(), removed Gui*Ex() controls
+*       2.1 (26-Dec-2018) REDESIGNED: GuiCheckBox(), GuiComboBox(), GuiDropdownBox(), GuiToggleGroup() > Use combined text string
+*                         REDESIGNED: Style system (breaking change)
+*       2.0 (08-Nov-2018) ADDED: Support controls guiLock and custom fonts
+*                         REVIEWED: GuiComboBox(), GuiListView()...
+*       1.9 (09-Oct-2018) REVIEWED: GuiGrid(), GuiTextBox(), GuiTextBoxMulti(), GuiValueBox()...
 *       1.8 (01-May-2018) Lot of rework and redesign to align with rGuiStyler and rGuiLayout
 *       1.5 (21-Jun-2017) Working in an improved styles system
 *       1.4 (15-Jun-2017) Rewritten all GUI functions (removed useless ones)
-*       1.3 (12-Jun-2017) Redesigned styles system
+*       1.3 (12-Jun-2017) Complete redesign of style system
 *       1.1 (01-Jun-2017) Complete review of the library
 *       1.0 (07-Jun-2016) Converted to header-only by Ramon Santamaria.
 *       0.9 (07-Mar-2016) Reviewed and tested by Albert Martos, Ian Eito, Sergio Martinez and Ramon Santamaria.
 *       0.8 (27-Aug-2015) Initial release. Implemented by Kevin Gato, Daniel Nicolás and Ramon Santamaria.
 *
+*
 *   CONTRIBUTORS:
-*       Ramon Santamaria:   Supervision, review, redesign, update and maintenance...
+*
+*       Ramon Santamaria:   Supervision, review, redesign, update and maintenance
 *       Vlad Adrian:        Complete rewrite of GuiTextBox() to support extended features (2019)
 *       Sergio Martinez:    Review, testing (2015) and redesign of multiple controls (2018)
 *       Adria Arranz:       Testing and Implementation of additional controls (2018)
@@ -110,7 +174,7 @@ module raygui;
 *
 *   LICENSE: zlib/libpng
 *
-*   Copyright (c) 2014-2020 Ramon Santamaria (@raysan5)
+*   Copyright (c) 2014-2022 Ramon Santamaria (@raysan5)
 *
 *   This software is provided "as-is", without any express or implied warranty. In no event
 *   will the authors be held liable for any damages arising from the use of this software.
@@ -133,7 +197,7 @@ import raylib;
 
 extern (C) @nogc nothrow:
 
-enum RAYGUI_VERSION = "3.0";
+enum RAYGUI_VERSION = "3.2";
 
 // Function specifiers in case library is build/used as a shared library (Windows)
 // NOTE: Microsoft specifiers to tell compiler that symbols are imported/exported from a .dll
@@ -148,7 +212,8 @@ enum RAYGUI_VERSION = "3.0";
 // Defines and Macros
 //----------------------------------------------------------------------------------
 
-// TODO: Implement custom TraceLog()
+// Simple log system to avoid printf() calls if required
+// NOTE: Avoiding those calls, also avoids const strings memory usage
 
 //----------------------------------------------------------------------------------
 // Types and Structures Definition
@@ -196,30 +261,32 @@ struct GuiStyleProp
 {
     ushort controlId;
     ushort propertyId;
-    int propertyValue;
+    uint propertyValue;
 }
 
 // Gui control state
-enum GuiControlState
+enum GuiState
 {
-    GUI_STATE_NORMAL = 0,
-    GUI_STATE_FOCUSED = 1,
-    GUI_STATE_PRESSED = 2,
-    GUI_STATE_DISABLED = 3
+    STATE_NORMAL = 0,
+    STATE_FOCUSED = 1,
+    STATE_PRESSED = 2,
+    STATE_DISABLED = 3
 }
 
 // Gui control text alignment
 enum GuiTextAlignment
 {
-    GUI_TEXT_ALIGN_LEFT = 0,
-    GUI_TEXT_ALIGN_CENTER = 1,
-    GUI_TEXT_ALIGN_RIGHT = 2
+    TEXT_ALIGN_LEFT = 0,
+    TEXT_ALIGN_CENTER = 1,
+    TEXT_ALIGN_RIGHT = 2
 }
 
 // Gui controls
 enum GuiControl
 {
-    DEFAULT = 0, // Generic control -> populates to all controls when set
+    // Default -> populates to all controls when set
+    DEFAULT = 0,
+    // Basic controls
     LABEL = 1, // Used also for: LABELBUTTON
     BUTTON = 2,
     TOGGLE = 3, // Used also for: TOGGLEGROUP
@@ -230,7 +297,7 @@ enum GuiControl
     DROPDOWNBOX = 8,
     TEXTBOX = 9, // Used also for: TEXTBOXMULTI
     VALUEBOX = 10,
-    SPINNER = 11,
+    SPINNER = 11, // Uses: BUTTON, VALUEBOX
     LISTVIEW = 12,
     COLORPICKER = 13,
     SCROLLBAR = 14,
@@ -261,76 +328,41 @@ enum GuiControlProperty
 
 // Gui extended properties depend on control
 // NOTE: RAYGUI_MAX_PROPS_EXTENDED properties (by default 8 properties)
+//----------------------------------------------------------------------------------
 
 // DEFAULT extended properties
-// NOTE: Those properties are actually common to all controls
+// NOTE: Those properties are common to all controls or global
 enum GuiDefaultProperty
 {
-    TEXT_SIZE = 16,
-    TEXT_SPACING = 17,
-    LINE_COLOR = 18,
-    BACKGROUND_COLOR = 19
+    TEXT_SIZE = 16, // Text size (glyphs max height)
+    TEXT_SPACING = 17, // Text spacing between glyphs
+    LINE_COLOR = 18, // Line control color
+    BACKGROUND_COLOR = 19 // Background color
 }
 
 // Label
 //typedef enum { } GuiLabelProperty;
 
-// Button
+// Button/Spinner
 //typedef enum { } GuiButtonProperty;
 
 // Toggle/ToggleGroup
 enum GuiToggleProperty
 {
-    GROUP_PADDING = 16
+    GROUP_PADDING = 16 // ToggleGroup separation between toggles
 }
 
 // Slider/SliderBar
 enum GuiSliderProperty
 {
-    SLIDER_WIDTH = 16,
-    SLIDER_PADDING = 17
+    SLIDER_WIDTH = 16, // Slider size of internal bar
+    SLIDER_PADDING = 17 // Slider/SliderBar internal bar padding
 }
 
 // ProgressBar
 enum GuiProgressBarProperty
 {
-    PROGRESS_PADDING = 16
-}
-
-// CheckBox
-enum GuiCheckBoxProperty
-{
-    CHECK_PADDING = 16
-}
-
-// ComboBox
-enum GuiComboBoxProperty
-{
-    COMBO_BUTTON_WIDTH = 16,
-    COMBO_BUTTON_PADDING = 17
-}
-
-// DropdownBox
-enum GuiDropdownBoxProperty
-{
-    ARROW_PADDING = 16,
-    DROPDOWN_ITEMS_PADDING = 17
-}
-
-// TextBox/TextBoxMulti/ValueBox/Spinner
-enum GuiTextBoxProperty
-{
-    TEXT_INNER_PADDING = 16,
-    TEXT_LINES_PADDING = 17,
-    COLOR_SELECTED_FG = 18,
-    COLOR_SELECTED_BG = 19
-}
-
-// Spinner
-enum GuiSpinnerProperty
-{
-    SPIN_BUTTON_WIDTH = 16,
-    SPIN_BUTTON_PADDING = 17
+    PROGRESS_PADDING = 16 // ProgressBar internal padding
 }
 
 // ScrollBar
@@ -338,37 +370,67 @@ enum GuiScrollBarProperty
 {
     ARROWS_SIZE = 16,
     ARROWS_VISIBLE = 17,
-    SCROLL_SLIDER_PADDING = 18,
+    SCROLL_SLIDER_PADDING = 18, // (SLIDERBAR, SLIDER_PADDING)
     SCROLL_SLIDER_SIZE = 19,
     SCROLL_PADDING = 20,
     SCROLL_SPEED = 21
 }
 
-// ScrollBar side
-enum GuiScrollBarSide
+// CheckBox
+enum GuiCheckBoxProperty
 {
-    SCROLLBAR_LEFT_SIDE = 0,
-    SCROLLBAR_RIGHT_SIDE = 1
+    CHECK_PADDING = 16 // CheckBox internal check padding
+}
+
+// ComboBox
+enum GuiComboBoxProperty
+{
+    COMBO_BUTTON_WIDTH = 16, // ComboBox right button width
+    COMBO_BUTTON_SPACING = 17 // ComboBox button separation
+}
+
+// DropdownBox
+enum GuiDropdownBoxProperty
+{
+    ARROW_PADDING = 16, // DropdownBox arrow separation from border and items
+    DROPDOWN_ITEMS_SPACING = 17 // DropdownBox items separation
+}
+
+// TextBox/TextBoxMulti/ValueBox/Spinner
+enum GuiTextBoxProperty
+{
+    TEXT_INNER_PADDING = 16, // TextBox/TextBoxMulti/ValueBox/Spinner inner text padding
+    TEXT_LINES_SPACING = 17 // TextBoxMulti lines separation
+}
+
+// Spinner
+enum GuiSpinnerProperty
+{
+    SPIN_BUTTON_WIDTH = 16, // Spinner left/right buttons width
+    SPIN_BUTTON_SPACING = 17 // Spinner buttons separation
 }
 
 // ListView
 enum GuiListViewProperty
 {
-    LIST_ITEMS_HEIGHT = 16,
-    LIST_ITEMS_PADDING = 17,
-    SCROLLBAR_WIDTH = 18,
-    SCROLLBAR_SIDE = 19
+    LIST_ITEMS_HEIGHT = 16, // ListView items height
+    LIST_ITEMS_SPACING = 17, // ListView items separation
+    SCROLLBAR_WIDTH = 18, // ListView scrollbar size (usually width)
+    SCROLLBAR_SIDE = 19 // ListView scrollbar side (0-left, 1-right)
 }
 
 // ColorPicker
 enum GuiColorPickerProperty
 {
     COLOR_SELECTOR_SIZE = 16,
-    HUEBAR_WIDTH = 17, // Right hue bar width
-    HUEBAR_PADDING = 18, // Right hue bar separation from panel
-    HUEBAR_SELECTOR_HEIGHT = 19, // Right hue bar selector height
-    HUEBAR_SELECTOR_OVERFLOW = 20 // Right hue bar selector overflow
+    HUEBAR_WIDTH = 17, // ColorPicker right hue bar width
+    HUEBAR_PADDING = 18, // ColorPicker right hue bar separation from panel
+    HUEBAR_SELECTOR_HEIGHT = 19, // ColorPicker right hue bar selector height
+    HUEBAR_SELECTOR_OVERFLOW = 20 // ColorPicker right hue bar selector overflow
 }
+
+enum SCROLLBAR_LEFT_SIDE = 0;
+enum SCROLLBAR_RIGHT_SIDE = 1;
 
 //----------------------------------------------------------------------------------
 // Global Variables Definition
@@ -403,8 +465,8 @@ int GuiGetStyle (int control, int property); // Get one style property
 bool GuiWindowBox (Rectangle bounds, const(char)* title); // Window Box control, shows a window that can be closed
 void GuiGroupBox (Rectangle bounds, const(char)* text); // Group Box control with text name
 void GuiLine (Rectangle bounds, const(char)* text); // Line separator control, could contain text
-void GuiPanel (Rectangle bounds); // Panel control, useful to group controls
-Rectangle GuiScrollPanel (Rectangle bounds, Rectangle content, Vector2* scroll); // Scroll Panel control
+void GuiPanel (Rectangle bounds, const(char)* text); // Panel control, useful to group controls
+Rectangle GuiScrollPanel (Rectangle bounds, const(char)* text, Rectangle content, Vector2* scroll); // Scroll Panel control
 
 // Basic controls set
 void GuiLabel (Rectangle bounds, const(char)* text); // Label control, shows text
@@ -424,41 +486,298 @@ float GuiSliderBar (Rectangle bounds, const(char)* textLeft, const(char)* textRi
 float GuiProgressBar (Rectangle bounds, const(char)* textLeft, const(char)* textRight, float value, float minValue, float maxValue); // Progress Bar control, shows current progress value
 void GuiStatusBar (Rectangle bounds, const(char)* text); // Status Bar control, shows info text
 void GuiDummyRec (Rectangle bounds, const(char)* text); // Dummy control for placeholders
-int GuiScrollBar (Rectangle bounds, int value, int minValue, int maxValue); // Scroll Bar control
-Vector2 GuiGrid (Rectangle bounds, float spacing, int subdivs); // Grid control
+Vector2 GuiGrid (Rectangle bounds, const(char)* text, float spacing, int subdivs); // Grid control, returns mouse cell position
 
 // Advance controls set
 int GuiListView (Rectangle bounds, const(char)* text, int* scrollIndex, int active); // List View control, returns selected list item index
 int GuiListViewEx (Rectangle bounds, const(char*)* text, int count, int* focus, int* scrollIndex, int active); // List View with extended parameters
 int GuiMessageBox (Rectangle bounds, const(char)* title, const(char)* message, const(char)* buttons); // Message Box control, displays a message
-int GuiTextInputBox (Rectangle bounds, const(char)* title, const(char)* message, const(char)* buttons, char* text); // Text Input Box control, ask for text
-Color GuiColorPicker (Rectangle bounds, Color color); // Color Picker control (multiple color controls)
-Color GuiColorPanel (Rectangle bounds, Color color); // Color Panel control
-float GuiColorBarAlpha (Rectangle bounds, float alpha); // Color Bar Alpha control
-float GuiColorBarHue (Rectangle bounds, float value); // Color Bar Hue control
+int GuiTextInputBox (Rectangle bounds, const(char)* title, const(char)* message, const(char)* buttons, char* text, int textMaxSize, int* secretViewActive); // Text Input Box control, ask for text, supports secret
+Color GuiColorPicker (Rectangle bounds, const(char)* text, Color color); // Color Picker control (multiple color controls)
+Color GuiColorPanel (Rectangle bounds, const(char)* text, Color color); // Color Panel control
+float GuiColorBarAlpha (Rectangle bounds, const(char)* text, float alpha); // Color Bar Alpha control
+float GuiColorBarHue (Rectangle bounds, const(char)* text, float value); // Color Bar Hue control
 
 // Styles loading functions
 void GuiLoadStyle (const(char)* fileName); // Load style file over global style variable (.rgs)
 void GuiLoadStyleDefault (); // Load style default over global style
 
-/*
-typedef GuiStyle (unsigned int *)
-RAYGUIAPI GuiStyle LoadGuiStyle(const char *fileName);          // Load style from file (.rgs)
-RAYGUIAPI void UnloadGuiStyle(GuiStyle style);                  // Unload style
-*/
-
+// Icons functionality
 const(char)* GuiIconText (int iconId, const(char)* text); // Get text with icon id prepended (if supported)
 
-// Gui icons functionality
 void GuiDrawIcon (int iconId, int posX, int posY, int pixelSize, Color color);
 
 uint* GuiGetIcons (); // Get full icons data pointer
 uint* GuiGetIconData (int iconId); // Get icon bit data
 void GuiSetIconData (int iconId, uint* data); // Set icon bit data
+void GuiSetIconScale (uint scale); // Set icon scale (1 by default)
 
 void GuiSetIconPixel (int iconId, int x, int y); // Set icon pixel value
 void GuiClearIconPixel (int iconId, int x, int y); // Clear icon pixel value
 bool GuiCheckIconPixel (int iconId, int x, int y); // Check icon pixel value
+
+//----------------------------------------------------------------------------------
+// Icons enumeration
+//----------------------------------------------------------------------------------
+enum GuiIconName
+{
+    ICON_NONE = 0,
+    ICON_FOLDER_FILE_OPEN = 1,
+    ICON_FILE_SAVE_CLASSIC = 2,
+    ICON_FOLDER_OPEN = 3,
+    ICON_FOLDER_SAVE = 4,
+    ICON_FILE_OPEN = 5,
+    ICON_FILE_SAVE = 6,
+    ICON_FILE_EXPORT = 7,
+    ICON_FILE_ADD = 8,
+    ICON_FILE_DELETE = 9,
+    ICON_FILETYPE_TEXT = 10,
+    ICON_FILETYPE_AUDIO = 11,
+    ICON_FILETYPE_IMAGE = 12,
+    ICON_FILETYPE_PLAY = 13,
+    ICON_FILETYPE_VIDEO = 14,
+    ICON_FILETYPE_INFO = 15,
+    ICON_FILE_COPY = 16,
+    ICON_FILE_CUT = 17,
+    ICON_FILE_PASTE = 18,
+    ICON_CURSOR_HAND = 19,
+    ICON_CURSOR_POINTER = 20,
+    ICON_CURSOR_CLASSIC = 21,
+    ICON_PENCIL = 22,
+    ICON_PENCIL_BIG = 23,
+    ICON_BRUSH_CLASSIC = 24,
+    ICON_BRUSH_PAINTER = 25,
+    ICON_WATER_DROP = 26,
+    ICON_COLOR_PICKER = 27,
+    ICON_RUBBER = 28,
+    ICON_COLOR_BUCKET = 29,
+    ICON_TEXT_T = 30,
+    ICON_TEXT_A = 31,
+    ICON_SCALE = 32,
+    ICON_RESIZE = 33,
+    ICON_FILTER_POINT = 34,
+    ICON_FILTER_BILINEAR = 35,
+    ICON_CROP = 36,
+    ICON_CROP_ALPHA = 37,
+    ICON_SQUARE_TOGGLE = 38,
+    ICON_SYMMETRY = 39,
+    ICON_SYMMETRY_HORIZONTAL = 40,
+    ICON_SYMMETRY_VERTICAL = 41,
+    ICON_LENS = 42,
+    ICON_LENS_BIG = 43,
+    ICON_EYE_ON = 44,
+    ICON_EYE_OFF = 45,
+    ICON_FILTER_TOP = 46,
+    ICON_FILTER = 47,
+    ICON_TARGET_POINT = 48,
+    ICON_TARGET_SMALL = 49,
+    ICON_TARGET_BIG = 50,
+    ICON_TARGET_MOVE = 51,
+    ICON_CURSOR_MOVE = 52,
+    ICON_CURSOR_SCALE = 53,
+    ICON_CURSOR_SCALE_RIGHT = 54,
+    ICON_CURSOR_SCALE_LEFT = 55,
+    ICON_UNDO = 56,
+    ICON_REDO = 57,
+    ICON_REREDO = 58,
+    ICON_MUTATE = 59,
+    ICON_ROTATE = 60,
+    ICON_REPEAT = 61,
+    ICON_SHUFFLE = 62,
+    ICON_EMPTYBOX = 63,
+    ICON_TARGET = 64,
+    ICON_TARGET_SMALL_FILL = 65,
+    ICON_TARGET_BIG_FILL = 66,
+    ICON_TARGET_MOVE_FILL = 67,
+    ICON_CURSOR_MOVE_FILL = 68,
+    ICON_CURSOR_SCALE_FILL = 69,
+    ICON_CURSOR_SCALE_RIGHT_FILL = 70,
+    ICON_CURSOR_SCALE_LEFT_FILL = 71,
+    ICON_UNDO_FILL = 72,
+    ICON_REDO_FILL = 73,
+    ICON_REREDO_FILL = 74,
+    ICON_MUTATE_FILL = 75,
+    ICON_ROTATE_FILL = 76,
+    ICON_REPEAT_FILL = 77,
+    ICON_SHUFFLE_FILL = 78,
+    ICON_EMPTYBOX_SMALL = 79,
+    ICON_BOX = 80,
+    ICON_BOX_TOP = 81,
+    ICON_BOX_TOP_RIGHT = 82,
+    ICON_BOX_RIGHT = 83,
+    ICON_BOX_BOTTOM_RIGHT = 84,
+    ICON_BOX_BOTTOM = 85,
+    ICON_BOX_BOTTOM_LEFT = 86,
+    ICON_BOX_LEFT = 87,
+    ICON_BOX_TOP_LEFT = 88,
+    ICON_BOX_CENTER = 89,
+    ICON_BOX_CIRCLE_MASK = 90,
+    ICON_POT = 91,
+    ICON_ALPHA_MULTIPLY = 92,
+    ICON_ALPHA_CLEAR = 93,
+    ICON_DITHERING = 94,
+    ICON_MIPMAPS = 95,
+    ICON_BOX_GRID = 96,
+    ICON_GRID = 97,
+    ICON_BOX_CORNERS_SMALL = 98,
+    ICON_BOX_CORNERS_BIG = 99,
+    ICON_FOUR_BOXES = 100,
+    ICON_GRID_FILL = 101,
+    ICON_BOX_MULTISIZE = 102,
+    ICON_ZOOM_SMALL = 103,
+    ICON_ZOOM_MEDIUM = 104,
+    ICON_ZOOM_BIG = 105,
+    ICON_ZOOM_ALL = 106,
+    ICON_ZOOM_CENTER = 107,
+    ICON_BOX_DOTS_SMALL = 108,
+    ICON_BOX_DOTS_BIG = 109,
+    ICON_BOX_CONCENTRIC = 110,
+    ICON_BOX_GRID_BIG = 111,
+    ICON_OK_TICK = 112,
+    ICON_CROSS = 113,
+    ICON_ARROW_LEFT = 114,
+    ICON_ARROW_RIGHT = 115,
+    ICON_ARROW_DOWN = 116,
+    ICON_ARROW_UP = 117,
+    ICON_ARROW_LEFT_FILL = 118,
+    ICON_ARROW_RIGHT_FILL = 119,
+    ICON_ARROW_DOWN_FILL = 120,
+    ICON_ARROW_UP_FILL = 121,
+    ICON_AUDIO = 122,
+    ICON_FX = 123,
+    ICON_WAVE = 124,
+    ICON_WAVE_SINUS = 125,
+    ICON_WAVE_SQUARE = 126,
+    ICON_WAVE_TRIANGULAR = 127,
+    ICON_CROSS_SMALL = 128,
+    ICON_PLAYER_PREVIOUS = 129,
+    ICON_PLAYER_PLAY_BACK = 130,
+    ICON_PLAYER_PLAY = 131,
+    ICON_PLAYER_PAUSE = 132,
+    ICON_PLAYER_STOP = 133,
+    ICON_PLAYER_NEXT = 134,
+    ICON_PLAYER_RECORD = 135,
+    ICON_MAGNET = 136,
+    ICON_LOCK_CLOSE = 137,
+    ICON_LOCK_OPEN = 138,
+    ICON_CLOCK = 139,
+    ICON_TOOLS = 140,
+    ICON_GEAR = 141,
+    ICON_GEAR_BIG = 142,
+    ICON_BIN = 143,
+    ICON_HAND_POINTER = 144,
+    ICON_LASER = 145,
+    ICON_COIN = 146,
+    ICON_EXPLOSION = 147,
+    ICON_1UP = 148,
+    ICON_PLAYER = 149,
+    ICON_PLAYER_JUMP = 150,
+    ICON_KEY = 151,
+    ICON_DEMON = 152,
+    ICON_TEXT_POPUP = 153,
+    ICON_GEAR_EX = 154,
+    ICON_CRACK = 155,
+    ICON_CRACK_POINTS = 156,
+    ICON_STAR = 157,
+    ICON_DOOR = 158,
+    ICON_EXIT = 159,
+    ICON_MODE_2D = 160,
+    ICON_MODE_3D = 161,
+    ICON_CUBE = 162,
+    ICON_CUBE_FACE_TOP = 163,
+    ICON_CUBE_FACE_LEFT = 164,
+    ICON_CUBE_FACE_FRONT = 165,
+    ICON_CUBE_FACE_BOTTOM = 166,
+    ICON_CUBE_FACE_RIGHT = 167,
+    ICON_CUBE_FACE_BACK = 168,
+    ICON_CAMERA = 169,
+    ICON_SPECIAL = 170,
+    ICON_LINK_NET = 171,
+    ICON_LINK_BOXES = 172,
+    ICON_LINK_MULTI = 173,
+    ICON_LINK = 174,
+    ICON_LINK_BROKE = 175,
+    ICON_TEXT_NOTES = 176,
+    ICON_NOTEBOOK = 177,
+    ICON_SUITCASE = 178,
+    ICON_SUITCASE_ZIP = 179,
+    ICON_MAILBOX = 180,
+    ICON_MONITOR = 181,
+    ICON_PRINTER = 182,
+    ICON_PHOTO_CAMERA = 183,
+    ICON_PHOTO_CAMERA_FLASH = 184,
+    ICON_HOUSE = 185,
+    ICON_HEART = 186,
+    ICON_CORNER = 187,
+    ICON_VERTICAL_BARS = 188,
+    ICON_VERTICAL_BARS_FILL = 189,
+    ICON_LIFE_BARS = 190,
+    ICON_INFO = 191,
+    ICON_CROSSLINE = 192,
+    ICON_HELP = 193,
+    ICON_FILETYPE_ALPHA = 194,
+    ICON_FILETYPE_HOME = 195,
+    ICON_LAYERS_VISIBLE = 196,
+    ICON_LAYERS = 197,
+    ICON_WINDOW = 198,
+    ICON_HIDPI = 199,
+    ICON_FILETYPE_BINARY = 200,
+    ICON_HEX = 201,
+    ICON_SHIELD = 202,
+    ICON_FILE_NEW = 203,
+    ICON_FOLDER_ADD = 204,
+    ICON_ALARM = 205,
+    ICON_206 = 206,
+    ICON_207 = 207,
+    ICON_208 = 208,
+    ICON_209 = 209,
+    ICON_210 = 210,
+    ICON_211 = 211,
+    ICON_212 = 212,
+    ICON_213 = 213,
+    ICON_214 = 214,
+    ICON_215 = 215,
+    ICON_216 = 216,
+    ICON_217 = 217,
+    ICON_218 = 218,
+    ICON_219 = 219,
+    ICON_220 = 220,
+    ICON_221 = 221,
+    ICON_222 = 222,
+    ICON_223 = 223,
+    ICON_224 = 224,
+    ICON_225 = 225,
+    ICON_226 = 226,
+    ICON_227 = 227,
+    ICON_228 = 228,
+    ICON_229 = 229,
+    ICON_230 = 230,
+    ICON_231 = 231,
+    ICON_232 = 232,
+    ICON_233 = 233,
+    ICON_234 = 234,
+    ICON_235 = 235,
+    ICON_236 = 236,
+    ICON_237 = 237,
+    ICON_238 = 238,
+    ICON_239 = 239,
+    ICON_240 = 240,
+    ICON_241 = 241,
+    ICON_242 = 242,
+    ICON_243 = 243,
+    ICON_244 = 244,
+    ICON_245 = 245,
+    ICON_246 = 246,
+    ICON_247 = 247,
+    ICON_248 = 248,
+    ICON_249 = 249,
+    ICON_250 = 250,
+    ICON_251 = 251,
+    ICON_252 = 252,
+    ICON_253 = 253,
+    ICON_254 = 254,
+    ICON_255 = 255
+}
 
 // Prevents name mangling of functions
 
@@ -476,281 +795,16 @@ bool GuiCheckIconPixel (int iconId, int x, int y); // Check icon pixel value
 // Required for: va_list, va_start(), vfprintf(), va_end() [TextFormat()]
 // Required for: roundf() [GuiColorPicker()]
 
-// External icons data provided, it can be generated with rGuiIcons tool
-
-// Embedded raygui icons, no external file provided
-
-// Size of icons (squared)
+// Embedded icons, no external file provided
+// Size of icons in pixels (squared)
 // Maximum number of icons
 // Maximum length of icon name id
 
 // Icons data is defined by bit array (every bit represents one pixel)
-// Those arrays are stored as unsigned int data arrays, so every array
-// element defines 32 pixels (bits) of information
-// Number of elemens depend on RICON_SIZE (by default 16x16 pixels)
-
-//----------------------------------------------------------------------------------
-// Icons enumeration
-//----------------------------------------------------------------------------------
-
-enum GuiIconName {
-    RICON_NONE                     = 0,
-    RICON_FOLDER_FILE_OPEN         = 1,
-    RICON_FILE_SAVE_CLASSIC        = 2,
-    RICON_FOLDER_OPEN              = 3,
-    RICON_FOLDER_SAVE              = 4,
-    RICON_FILE_OPEN                = 5,
-    RICON_FILE_SAVE                = 6,
-    RICON_FILE_EXPORT              = 7,
-    RICON_FILE_NEW                 = 8,
-    RICON_FILE_DELETE              = 9,
-    RICON_FILETYPE_TEXT            = 10,
-    RICON_FILETYPE_AUDIO           = 11,
-    RICON_FILETYPE_IMAGE           = 12,
-    RICON_FILETYPE_PLAY            = 13,
-    RICON_FILETYPE_VIDEO           = 14,
-    RICON_FILETYPE_INFO            = 15,
-    RICON_FILE_COPY                = 16,
-    RICON_FILE_CUT                 = 17,
-    RICON_FILE_PASTE               = 18,
-    RICON_CURSOR_HAND              = 19,
-    RICON_CURSOR_POINTER           = 20,
-    RICON_CURSOR_CLASSIC           = 21,
-    RICON_PENCIL                   = 22,
-    RICON_PENCIL_BIG               = 23,
-    RICON_BRUSH_CLASSIC            = 24,
-    RICON_BRUSH_PAINTER            = 25,
-    RICON_WATER_DROP               = 26,
-    RICON_COLOR_PICKER             = 27,
-    RICON_RUBBER                   = 28,
-    RICON_COLOR_BUCKET             = 29,
-    RICON_TEXT_T                   = 30,
-    RICON_TEXT_A                   = 31,
-    RICON_SCALE                    = 32,
-    RICON_RESIZE                   = 33,
-    RICON_FILTER_POINT             = 34,
-    RICON_FILTER_BILINEAR          = 35,
-    RICON_CROP                     = 36,
-    RICON_CROP_ALPHA               = 37,
-    RICON_SQUARE_TOGGLE            = 38,
-    RICON_SYMMETRY                 = 39,
-    RICON_SYMMETRY_HORIZONTAL      = 40,
-    RICON_SYMMETRY_VERTICAL        = 41,
-    RICON_LENS                     = 42,
-    RICON_LENS_BIG                 = 43,
-    RICON_EYE_ON                   = 44,
-    RICON_EYE_OFF                  = 45,
-    RICON_FILTER_TOP               = 46,
-    RICON_FILTER                   = 47,
-    RICON_TARGET_POINT             = 48,
-    RICON_TARGET_SMALL             = 49,
-    RICON_TARGET_BIG               = 50,
-    RICON_TARGET_MOVE              = 51,
-    RICON_CURSOR_MOVE              = 52,
-    RICON_CURSOR_SCALE             = 53,
-    RICON_CURSOR_SCALE_RIGHT       = 54,
-    RICON_CURSOR_SCALE_LEFT        = 55,
-    RICON_UNDO                     = 56,
-    RICON_REDO                     = 57,
-    RICON_REREDO                   = 58,
-    RICON_MUTATE                   = 59,
-    RICON_ROTATE                   = 60,
-    RICON_REPEAT                   = 61,
-    RICON_SHUFFLE                  = 62,
-    RICON_EMPTYBOX                 = 63,
-    RICON_TARGET                   = 64,
-    RICON_TARGET_SMALL_FILL        = 65,
-    RICON_TARGET_BIG_FILL          = 66,
-    RICON_TARGET_MOVE_FILL         = 67,
-    RICON_CURSOR_MOVE_FILL         = 68,
-    RICON_CURSOR_SCALE_FILL        = 69,
-    RICON_CURSOR_SCALE_RIGHT_FILL  = 70,
-    RICON_CURSOR_SCALE_LEFT_FILL   = 71,
-    RICON_UNDO_FILL                = 72,
-    RICON_REDO_FILL                = 73,
-    RICON_REREDO_FILL              = 74,
-    RICON_MUTATE_FILL              = 75,
-    RICON_ROTATE_FILL              = 76,
-    RICON_REPEAT_FILL              = 77,
-    RICON_SHUFFLE_FILL             = 78,
-    RICON_EMPTYBOX_SMALL           = 79,
-    RICON_BOX                      = 80,
-    RICON_BOX_TOP                  = 81,
-    RICON_BOX_TOP_RIGHT            = 82,
-    RICON_BOX_RIGHT                = 83,
-    RICON_BOX_BOTTOM_RIGHT         = 84,
-    RICON_BOX_BOTTOM               = 85,
-    RICON_BOX_BOTTOM_LEFT          = 86,
-    RICON_BOX_LEFT                 = 87,
-    RICON_BOX_TOP_LEFT             = 88,
-    RICON_BOX_CENTER               = 89,
-    RICON_BOX_CIRCLE_MASK          = 90,
-    RICON_POT                      = 91,
-    RICON_ALPHA_MULTIPLY           = 92,
-    RICON_ALPHA_CLEAR              = 93,
-    RICON_DITHERING                = 94,
-    RICON_MIPMAPS                  = 95,
-    RICON_BOX_GRID                 = 96,
-    RICON_GRID                     = 97,
-    RICON_BOX_CORNERS_SMALL        = 98,
-    RICON_BOX_CORNERS_BIG          = 99,
-    RICON_FOUR_BOXES               = 100,
-    RICON_GRID_FILL                = 101,
-    RICON_BOX_MULTISIZE            = 102,
-    RICON_ZOOM_SMALL               = 103,
-    RICON_ZOOM_MEDIUM              = 104,
-    RICON_ZOOM_BIG                 = 105,
-    RICON_ZOOM_ALL                 = 106,
-    RICON_ZOOM_CENTER              = 107,
-    RICON_BOX_DOTS_SMALL           = 108,
-    RICON_BOX_DOTS_BIG             = 109,
-    RICON_BOX_CONCENTRIC           = 110,
-    RICON_BOX_GRID_BIG             = 111,
-    RICON_OK_TICK                  = 112,
-    RICON_CROSS                    = 113,
-    RICON_ARROW_LEFT               = 114,
-    RICON_ARROW_RIGHT              = 115,
-    RICON_ARROW_DOWN               = 116,
-    RICON_ARROW_UP                 = 117,
-    RICON_ARROW_LEFT_FILL          = 118,
-    RICON_ARROW_RIGHT_FILL         = 119,
-    RICON_ARROW_DOWN_FILL          = 120,
-    RICON_ARROW_UP_FILL            = 121,
-    RICON_AUDIO                    = 122,
-    RICON_FX                       = 123,
-    RICON_WAVE                     = 124,
-    RICON_WAVE_SINUS               = 125,
-    RICON_WAVE_SQUARE              = 126,
-    RICON_WAVE_TRIANGULAR          = 127,
-    RICON_CROSS_SMALL              = 128,
-    RICON_PLAYER_PREVIOUS          = 129,
-    RICON_PLAYER_PLAY_BACK         = 130,
-    RICON_PLAYER_PLAY              = 131,
-    RICON_PLAYER_PAUSE             = 132,
-    RICON_PLAYER_STOP              = 133,
-    RICON_PLAYER_NEXT              = 134,
-    RICON_PLAYER_RECORD            = 135,
-    RICON_MAGNET                   = 136,
-    RICON_LOCK_CLOSE               = 137,
-    RICON_LOCK_OPEN                = 138,
-    RICON_CLOCK                    = 139,
-    RICON_TOOLS                    = 140,
-    RICON_GEAR                     = 141,
-    RICON_GEAR_BIG                 = 142,
-    RICON_BIN                      = 143,
-    RICON_HAND_POINTER             = 144,
-    RICON_LASER                    = 145,
-    RICON_COIN                     = 146,
-    RICON_EXPLOSION                = 147,
-    RICON_1UP                      = 148,
-    RICON_PLAYER                   = 149,
-    RICON_PLAYER_JUMP              = 150,
-    RICON_KEY                      = 151,
-    RICON_DEMON                    = 152,
-    RICON_TEXT_POPUP               = 153,
-    RICON_GEAR_EX                  = 154,
-    RICON_CRACK                    = 155,
-    RICON_CRACK_POINTS             = 156,
-    RICON_STAR                     = 157,
-    RICON_DOOR                     = 158,
-    RICON_EXIT                     = 159,
-    RICON_MODE_2D                  = 160,
-    RICON_MODE_3D                  = 161,
-    RICON_CUBE                     = 162,
-    RICON_CUBE_FACE_TOP            = 163,
-    RICON_CUBE_FACE_LEFT           = 164,
-    RICON_CUBE_FACE_FRONT          = 165,
-    RICON_CUBE_FACE_BOTTOM         = 166,
-    RICON_CUBE_FACE_RIGHT          = 167,
-    RICON_CUBE_FACE_BACK           = 168,
-    RICON_CAMERA                   = 169,
-    RICON_SPECIAL                  = 170,
-    RICON_LINK_NET                 = 171,
-    RICON_LINK_BOXES               = 172,
-    RICON_LINK_MULTI               = 173,
-    RICON_LINK                     = 174,
-    RICON_LINK_BROKE               = 175,
-    RICON_TEXT_NOTES               = 176,
-    RICON_NOTEBOOK                 = 177,
-    RICON_SUITCASE                 = 178,
-    RICON_SUITCASE_ZIP             = 179,
-    RICON_MAILBOX                  = 180,
-    RICON_MONITOR                  = 181,
-    RICON_PRINTER                  = 182,
-    RICON_PHOTO_CAMERA             = 183,
-    RICON_PHOTO_CAMERA_FLASH       = 184,
-    RICON_HOUSE                    = 185,
-    RICON_HEART                    = 186,
-    RICON_CORNER                   = 187,
-    RICON_VERTICAL_BARS            = 188,
-    RICON_VERTICAL_BARS_FILL       = 189,
-    RICON_LIFE_BARS                = 190,
-    RICON_INFO                     = 191,
-    RICON_CROSSLINE                = 192,
-    RICON_HELP                     = 193,
-    RICON_FILETYPE_ALPHA           = 194,
-    RICON_FILETYPE_HOME            = 195,
-    RICON_LAYERS_VISIBLE           = 196,
-    RICON_LAYERS                   = 197,
-    RICON_WINDOW                   = 198,
-    RICON_HIDPI                    = 199,
-    RICON_200                      = 200,
-    RICON_201                      = 201,
-    RICON_202                      = 202,
-    RICON_203                      = 203,
-    RICON_204                      = 204,
-    RICON_205                      = 205,
-    RICON_206                      = 206,
-    RICON_207                      = 207,
-    RICON_208                      = 208,
-    RICON_209                      = 209,
-    RICON_210                      = 210,
-    RICON_211                      = 211,
-    RICON_212                      = 212,
-    RICON_213                      = 213,
-    RICON_214                      = 214,
-    RICON_215                      = 215,
-    RICON_216                      = 216,
-    RICON_217                      = 217,
-    RICON_218                      = 218,
-    RICON_219                      = 219,
-    RICON_220                      = 220,
-    RICON_221                      = 221,
-    RICON_222                      = 222,
-    RICON_223                      = 223,
-    RICON_224                      = 224,
-    RICON_225                      = 225,
-    RICON_226                      = 226,
-    RICON_227                      = 227,
-    RICON_228                      = 228,
-    RICON_229                      = 229,
-    RICON_230                      = 230,
-    RICON_231                      = 231,
-    RICON_232                      = 232,
-    RICON_233                      = 233,
-    RICON_234                      = 234,
-    RICON_235                      = 235,
-    RICON_236                      = 236,
-    RICON_237                      = 237,
-    RICON_238                      = 238,
-    RICON_239                      = 239,
-    RICON_240                      = 240,
-    RICON_241                      = 241,
-    RICON_242                      = 242,
-    RICON_243                      = 243,
-    RICON_244                      = 244,
-    RICON_245                      = 245,
-    RICON_246                      = 246,
-    RICON_247                      = 247,
-    RICON_248                      = 248,
-    RICON_249                      = 249,
-    RICON_250                      = 250,
-    RICON_251                      = 251,
-    RICON_252                      = 252,
-    RICON_253                      = 253,
-    RICON_254                      = 254,
-    RICON_255                      = 255,
-}
+// Those arrays are stored as unsigned int data arrays, so,
+// every array element defines 32 pixels (bits) of information
+// One icon is defined by 8 int, (8 int * 32 bit = 256 bit = 16*16 pixels)
+// NOTE: Number of elemens depend on RAYGUI_ICON_SIZE (by default 16x16 pixels)
 
 //----------------------------------------------------------------------------------
 // Icons data for all gui possible icons (allocated on data segment by default)
@@ -758,272 +812,270 @@ enum GuiIconName {
 // NOTE 1: Every icon is codified in binary form, using 1 bit per pixel, so,
 // every 16x16 icon requires 8 integers (16*16/32) to be stored
 //
-// NOTE 2: A new icon set could be loaded over this array using GuiLoadIcons(),
-// but loaded icons set must be same RICON_SIZE and no more than RICON_MAX_ICONS
+// NOTE 2: A different icon set could be loaded over this array using GuiLoadIcons(),
+// but loaded icons set must be same RAYGUI_ICON_SIZE and no more than RAYGUI_ICON_MAX_ICONS
 //
 // guiIcons size is by default: 256*(16*16/32) = 2048*4 = 8192 bytes = 8 KB
 //----------------------------------------------------------------------------------
 
-// RICON_NONE
-// RICON_FOLDER_FILE_OPEN
-// RICON_FILE_SAVE_CLASSIC
-// RICON_FOLDER_OPEN
-// RICON_FOLDER_SAVE
-// RICON_FILE_OPEN
-// RICON_FILE_SAVE
-// RICON_FILE_EXPORT
-// RICON_FILE_NEW
-// RICON_FILE_DELETE
-// RICON_FILETYPE_TEXT
-// RICON_FILETYPE_AUDIO
-// RICON_FILETYPE_IMAGE
-// RICON_FILETYPE_PLAY
-// RICON_FILETYPE_VIDEO
-// RICON_FILETYPE_INFO
-// RICON_FILE_COPY
-// RICON_FILE_CUT
-// RICON_FILE_PASTE
-// RICON_CURSOR_HAND
-// RICON_CURSOR_POINTER
-// RICON_CURSOR_CLASSIC
-// RICON_PENCIL
-// RICON_PENCIL_BIG
-// RICON_BRUSH_CLASSIC
-// RICON_BRUSH_PAINTER
-// RICON_WATER_DROP
-// RICON_COLOR_PICKER
-// RICON_RUBBER
-// RICON_COLOR_BUCKET
-// RICON_TEXT_T
-// RICON_TEXT_A
-// RICON_SCALE
-// RICON_RESIZE
-// RICON_FILTER_POINT
-// RICON_FILTER_BILINEAR
-// RICON_CROP
-// RICON_CROP_ALPHA
-// RICON_SQUARE_TOGGLE
-// RICON_SIMMETRY
-// RICON_SIMMETRY_HORIZONTAL
-// RICON_SIMMETRY_VERTICAL
-// RICON_LENS
-// RICON_LENS_BIG
-// RICON_EYE_ON
-// RICON_EYE_OFF
-// RICON_FILTER_TOP
-// RICON_FILTER
-// RICON_TARGET_POINT
-// RICON_TARGET_SMALL
-// RICON_TARGET_BIG
-// RICON_TARGET_MOVE
-// RICON_CURSOR_MOVE
-// RICON_CURSOR_SCALE
-// RICON_CURSOR_SCALE_RIGHT
-// RICON_CURSOR_SCALE_LEFT
-// RICON_UNDO
-// RICON_REDO
-// RICON_REREDO
-// RICON_MUTATE
-// RICON_ROTATE
-// RICON_REPEAT
-// RICON_SHUFFLE
-// RICON_EMPTYBOX
-// RICON_TARGET
-// RICON_TARGET_SMALL_FILL
-// RICON_TARGET_BIG_FILL
-// RICON_TARGET_MOVE_FILL
-// RICON_CURSOR_MOVE_FILL
-// RICON_CURSOR_SCALE_FILL
-// RICON_CURSOR_SCALE_RIGHT
-// RICON_CURSOR_SCALE_LEFT
-// RICON_UNDO_FILL
-// RICON_REDO_FILL
-// RICON_REREDO_FILL
-// RICON_MUTATE_FILL
-// RICON_ROTATE_FILL
-// RICON_REPEAT_FILL
-// RICON_SHUFFLE_FILL
-// RICON_EMPTYBOX_SMALL
-// RICON_BOX
-// RICON_BOX_TOP
-// RICON_BOX_TOP_RIGHT
-// RICON_BOX_RIGHT
-// RICON_BOX_BOTTOM_RIGHT
-// RICON_BOX_BOTTOM
-// RICON_BOX_BOTTOM_LEFT
-// RICON_BOX_LEFT
-// RICON_BOX_TOP_LEFT
-// RICON_BOX_CIRCLE_MASK
-// RICON_BOX_CENTER
-// RICON_POT
-// RICON_ALPHA_MULTIPLY
-// RICON_ALPHA_CLEAR
-// RICON_DITHERING
-// RICON_MIPMAPS
-// RICON_BOX_GRID
-// RICON_GRID
-// RICON_BOX_CORNERS_SMALL
-// RICON_BOX_CORNERS_BIG
-// RICON_FOUR_BOXES
-// RICON_GRID_FILL
-// RICON_BOX_MULTISIZE
-// RICON_ZOOM_SMALL
-// RICON_ZOOM_MEDIUM
-// RICON_ZOOM_BIG
-// RICON_ZOOM_ALL
-// RICON_ZOOM_CENTER
-// RICON_BOX_DOTS_SMALL
-// RICON_BOX_DOTS_BIG
-// RICON_BOX_CONCENTRIC
-// RICON_BOX_GRID_BIG
-// RICON_OK_TICK
-// RICON_CROSS
-// RICON_ARROW_LEFT
-// RICON_ARROW_RIGHT
-// RICON_ARROW_DOWN
-// RICON_ARROW_UP
-// RICON_ARROW_LEFT_FILL
-// RICON_ARROW_RIGHT_FILL
-// RICON_ARROW_DOWN_FILL
-// RICON_ARROW_UP_FILL
-// RICON_AUDIO
-// RICON_FX
-// RICON_WAVE
-// RICON_WAVE_SINUS
-// RICON_WAVE_SQUARE
-// RICON_WAVE_TRIANGULAR
-// RICON_CROSS_SMALL
-// RICON_PLAYER_PREVIOUS
-// RICON_PLAYER_PLAY_BACK
-// RICON_PLAYER_PLAY
-// RICON_PLAYER_PAUSE
-// RICON_PLAYER_STOP
-// RICON_PLAYER_NEXT
-// RICON_PLAYER_RECORD
-// RICON_MAGNET
-// RICON_LOCK_CLOSE
-// RICON_LOCK_OPEN
-// RICON_CLOCK
-// RICON_TOOLS
-// RICON_GEAR
-// RICON_GEAR_BIG
-// RICON_BIN
-// RICON_HAND_POINTER
-// RICON_LASER
-// RICON_COIN
-// RICON_EXPLOSION
-// RICON_1UP
-// RICON_PLAYER
-// RICON_PLAYER_JUMP
-// RICON_KEY
-// RICON_DEMON
-// RICON_TEXT_POPUP
-// RICON_GEAR_EX
-// RICON_CRACK
-// RICON_CRACK_POINTS
-// RICON_STAR
-// RICON_DOOR
-// RICON_EXIT
-// RICON_MODE_2D
-// RICON_MODE_3D
-// RICON_CUBE
-// RICON_CUBE_FACE_TOP
-// RICON_CUBE_FACE_LEFT
-// RICON_CUBE_FACE_FRONT
-// RICON_CUBE_FACE_BOTTOM
-// RICON_CUBE_FACE_RIGHT
-// RICON_CUBE_FACE_BACK
-// RICON_CAMERA
-// RICON_SPECIAL
-// RICON_LINK_NET
-// RICON_LINK_BOXES
-// RICON_LINK_MULTI
-// RICON_LINK
-// RICON_LINK_BROKE
-// RICON_TEXT_NOTES
-// RICON_NOTEBOOK
-// RICON_SUITCASE
-// RICON_SUITCASE_ZIP
-// RICON_MAILBOX
-// RICON_MONITOR
-// RICON_PRINTER
-// RICON_PHOTO_CAMERA
-// RICON_PHOTO_CAMERA_FLASH
-// RICON_HOUSE
-// RICON_HEART
-// RICON_CORNER
-// RICON_VERTICAL_BARS
-// RICON_VERTICAL_BARS_FILL
-// RICON_LIFE_BARS
-// RICON_INFO
-// RICON_CROSSLINE
-// RICON_HELP
-// RICON_FILETYPE_ALPHA
-// RICON_FILETYPE_HOME
-// RICON_LAYERS_VISIBLE
-// RICON_LAYERS
-// RICON_WINDOW
-// RICON_HIDPI
-// RICON_200
-// RICON_201
-// RICON_202
-// RICON_203
-// RICON_204
-// RICON_205
-// RICON_206
-// RICON_207
-// RICON_208
-// RICON_209
-// RICON_210
-// RICON_211
-// RICON_212
-// RICON_213
-// RICON_214
-// RICON_215
-// RICON_216
-// RICON_217
-// RICON_218
-// RICON_219
-// RICON_220
-// RICON_221
-// RICON_222
-// RICON_223
-// RICON_224
-// RICON_225
-// RICON_226
-// RICON_227
-// RICON_228
-// RICON_229
-// RICON_230
-// RICON_231
-// RICON_232
-// RICON_233
-// RICON_234
-// RICON_235
-// RICON_236
-// RICON_237
-// RICON_238
-// RICON_239
-// RICON_240
-// RICON_241
-// RICON_242
-// RICON_243
-// RICON_244
-// RICON_245
-// RICON_246
-// RICON_247
-// RICON_248
-// RICON_249
-// RICON_250
-// RICON_251
-// RICON_252
-// RICON_253
-// RICON_254
-// RICON_255
+// ICON_NONE
+// ICON_FOLDER_FILE_OPEN
+// ICON_FILE_SAVE_CLASSIC
+// ICON_FOLDER_OPEN
+// ICON_FOLDER_SAVE
+// ICON_FILE_OPEN
+// ICON_FILE_SAVE
+// ICON_FILE_EXPORT
+// ICON_FILE_ADD
+// ICON_FILE_DELETE
+// ICON_FILETYPE_TEXT
+// ICON_FILETYPE_AUDIO
+// ICON_FILETYPE_IMAGE
+// ICON_FILETYPE_PLAY
+// ICON_FILETYPE_VIDEO
+// ICON_FILETYPE_INFO
+// ICON_FILE_COPY
+// ICON_FILE_CUT
+// ICON_FILE_PASTE
+// ICON_CURSOR_HAND
+// ICON_CURSOR_POINTER
+// ICON_CURSOR_CLASSIC
+// ICON_PENCIL
+// ICON_PENCIL_BIG
+// ICON_BRUSH_CLASSIC
+// ICON_BRUSH_PAINTER
+// ICON_WATER_DROP
+// ICON_COLOR_PICKER
+// ICON_RUBBER
+// ICON_COLOR_BUCKET
+// ICON_TEXT_T
+// ICON_TEXT_A
+// ICON_SCALE
+// ICON_RESIZE
+// ICON_FILTER_POINT
+// ICON_FILTER_BILINEAR
+// ICON_CROP
+// ICON_CROP_ALPHA
+// ICON_SQUARE_TOGGLE
+// ICON_SYMMETRY
+// ICON_SYMMETRY_HORIZONTAL
+// ICON_SYMMETRY_VERTICAL
+// ICON_LENS
+// ICON_LENS_BIG
+// ICON_EYE_ON
+// ICON_EYE_OFF
+// ICON_FILTER_TOP
+// ICON_FILTER
+// ICON_TARGET_POINT
+// ICON_TARGET_SMALL
+// ICON_TARGET_BIG
+// ICON_TARGET_MOVE
+// ICON_CURSOR_MOVE
+// ICON_CURSOR_SCALE
+// ICON_CURSOR_SCALE_RIGHT
+// ICON_CURSOR_SCALE_LEFT
+// ICON_UNDO
+// ICON_REDO
+// ICON_REREDO
+// ICON_MUTATE
+// ICON_ROTATE
+// ICON_REPEAT
+// ICON_SHUFFLE
+// ICON_EMPTYBOX
+// ICON_TARGET
+// ICON_TARGET_SMALL_FILL
+// ICON_TARGET_BIG_FILL
+// ICON_TARGET_MOVE_FILL
+// ICON_CURSOR_MOVE_FILL
+// ICON_CURSOR_SCALE_FILL
+// ICON_CURSOR_SCALE_RIGHT_FILL
+// ICON_CURSOR_SCALE_LEFT_FILL
+// ICON_UNDO_FILL
+// ICON_REDO_FILL
+// ICON_REREDO_FILL
+// ICON_MUTATE_FILL
+// ICON_ROTATE_FILL
+// ICON_REPEAT_FILL
+// ICON_SHUFFLE_FILL
+// ICON_EMPTYBOX_SMALL
+// ICON_BOX
+// ICON_BOX_TOP
+// ICON_BOX_TOP_RIGHT
+// ICON_BOX_RIGHT
+// ICON_BOX_BOTTOM_RIGHT
+// ICON_BOX_BOTTOM
+// ICON_BOX_BOTTOM_LEFT
+// ICON_BOX_LEFT
+// ICON_BOX_TOP_LEFT
+// ICON_BOX_CENTER
+// ICON_BOX_CIRCLE_MASK
+// ICON_POT
+// ICON_ALPHA_MULTIPLY
+// ICON_ALPHA_CLEAR
+// ICON_DITHERING
+// ICON_MIPMAPS
+// ICON_BOX_GRID
+// ICON_GRID
+// ICON_BOX_CORNERS_SMALL
+// ICON_BOX_CORNERS_BIG
+// ICON_FOUR_BOXES
+// ICON_GRID_FILL
+// ICON_BOX_MULTISIZE
+// ICON_ZOOM_SMALL
+// ICON_ZOOM_MEDIUM
+// ICON_ZOOM_BIG
+// ICON_ZOOM_ALL
+// ICON_ZOOM_CENTER
+// ICON_BOX_DOTS_SMALL
+// ICON_BOX_DOTS_BIG
+// ICON_BOX_CONCENTRIC
+// ICON_BOX_GRID_BIG
+// ICON_OK_TICK
+// ICON_CROSS
+// ICON_ARROW_LEFT
+// ICON_ARROW_RIGHT
+// ICON_ARROW_DOWN
+// ICON_ARROW_UP
+// ICON_ARROW_LEFT_FILL
+// ICON_ARROW_RIGHT_FILL
+// ICON_ARROW_DOWN_FILL
+// ICON_ARROW_UP_FILL
+// ICON_AUDIO
+// ICON_FX
+// ICON_WAVE
+// ICON_WAVE_SINUS
+// ICON_WAVE_SQUARE
+// ICON_WAVE_TRIANGULAR
+// ICON_CROSS_SMALL
+// ICON_PLAYER_PREVIOUS
+// ICON_PLAYER_PLAY_BACK
+// ICON_PLAYER_PLAY
+// ICON_PLAYER_PAUSE
+// ICON_PLAYER_STOP
+// ICON_PLAYER_NEXT
+// ICON_PLAYER_RECORD
+// ICON_MAGNET
+// ICON_LOCK_CLOSE
+// ICON_LOCK_OPEN
+// ICON_CLOCK
+// ICON_TOOLS
+// ICON_GEAR
+// ICON_GEAR_BIG
+// ICON_BIN
+// ICON_HAND_POINTER
+// ICON_LASER
+// ICON_COIN
+// ICON_EXPLOSION
+// ICON_1UP
+// ICON_PLAYER
+// ICON_PLAYER_JUMP
+// ICON_KEY
+// ICON_DEMON
+// ICON_TEXT_POPUP
+// ICON_GEAR_EX
+// ICON_CRACK
+// ICON_CRACK_POINTS
+// ICON_STAR
+// ICON_DOOR
+// ICON_EXIT
+// ICON_MODE_2D
+// ICON_MODE_3D
+// ICON_CUBE
+// ICON_CUBE_FACE_TOP
+// ICON_CUBE_FACE_LEFT
+// ICON_CUBE_FACE_FRONT
+// ICON_CUBE_FACE_BOTTOM
+// ICON_CUBE_FACE_RIGHT
+// ICON_CUBE_FACE_BACK
+// ICON_CAMERA
+// ICON_SPECIAL
+// ICON_LINK_NET
+// ICON_LINK_BOXES
+// ICON_LINK_MULTI
+// ICON_LINK
+// ICON_LINK_BROKE
+// ICON_TEXT_NOTES
+// ICON_NOTEBOOK
+// ICON_SUITCASE
+// ICON_SUITCASE_ZIP
+// ICON_MAILBOX
+// ICON_MONITOR
+// ICON_PRINTER
+// ICON_PHOTO_CAMERA
+// ICON_PHOTO_CAMERA_FLASH
+// ICON_HOUSE
+// ICON_HEART
+// ICON_CORNER
+// ICON_VERTICAL_BARS
+// ICON_VERTICAL_BARS_FILL
+// ICON_LIFE_BARS
+// ICON_INFO
+// ICON_CROSSLINE
+// ICON_HELP
+// ICON_FILETYPE_ALPHA
+// ICON_FILETYPE_HOME
+// ICON_LAYERS_VISIBLE
+// ICON_LAYERS
+// ICON_WINDOW
+// ICON_HIDPI
+// ICON_FILETYPE_BINARY
+// ICON_HEX
+// ICON_SHIELD
+// ICON_FILE_NEW
+// ICON_FOLDER_ADD
+// ICON_ALARM
+// ICON_206
+// ICON_207
+// ICON_208
+// ICON_209
+// ICON_210
+// ICON_211
+// ICON_212
+// ICON_213
+// ICON_214
+// ICON_215
+// ICON_216
+// ICON_217
+// ICON_218
+// ICON_219
+// ICON_220
+// ICON_221
+// ICON_222
+// ICON_223
+// ICON_224
+// ICON_225
+// ICON_226
+// ICON_227
+// ICON_228
+// ICON_229
+// ICON_230
+// ICON_231
+// ICON_232
+// ICON_233
+// ICON_234
+// ICON_235
+// ICON_236
+// ICON_237
+// ICON_238
+// ICON_239
+// ICON_240
+// ICON_241
+// ICON_242
+// ICON_243
+// ICON_244
+// ICON_245
+// ICON_246
+// ICON_247
+// ICON_248
+// ICON_249
+// ICON_250
+// ICON_251
+// ICON_252
+// ICON_253
+// ICON_254
+// ICON_255
 
-// RAYGUI_CUSTOM_RICONS
-
-// !RAYGUI_NO_RICONS
+// !RAYGUI_NO_ICONS && !RAYGUI_CUSTOM_ICONS
 
 // Maximum number of standard controls
 // Maximum number of standard properties
@@ -1037,10 +1089,13 @@ enum GuiIconName {
 //----------------------------------------------------------------------------------
 // Global Variables Definition
 //----------------------------------------------------------------------------------
+// Gui global state, if !STATE_NORMAL, forces defined state
 
 // Gui current font (WARNING: highly coupled to raylib)
 // Gui lock state (no inputs processed)
 // Gui element transpacency on drawing
+
+// Gui icon default scale (if icons enabled)
 
 //----------------------------------------------------------------------------------
 // Style data array for all gui style properties (allocated on data segment by default)
@@ -1121,12 +1176,16 @@ enum GuiIconName {
 // Convert color data from HSV to RGB
 // Convert color data from RGB to HSV
 
+// Scroll bar control, used by GuiScrollPanel()
+
 //----------------------------------------------------------------------------------
 // Gui Setup Functions Definition
 //----------------------------------------------------------------------------------
 // Enable gui global state
+// NOTE: We check for STATE_DISABLED to avoid messing custom global state setups
 
 // Disable gui global state
+// NOTE: We check for STATE_NORMAL to avoid messing custom global state setups
 
 // Lock gui global state
 
@@ -1161,9 +1220,10 @@ enum GuiIconName {
 
 // Window Box control
 
+// Window title bar height (including borders)
 // NOTE: This define is also used by GuiMessageBox() and GuiTextInputBox()
 
-//GuiControlState state = guiState;
+//GuiState state = guiState;
 
 // Update control
 //--------------------------------------------------------------------
@@ -1197,12 +1257,21 @@ enum GuiIconName {
 
 // Panel control
 
+// Text will be drawn as a header bar (if provided)
+
+// Move panel bounds after the header bar
+
 // Draw control
 //--------------------------------------------------------------------
+// Draw panel header as status bar
 
 //--------------------------------------------------------------------
 
 // Scroll Panel control
+
+// Text will be drawn as a header bar (if provided)
+
+// Move panel bounds after the header bar
 
 // Recheck to account for the other scrollbar being visible
 
@@ -1225,6 +1294,8 @@ enum GuiIconName {
 
 // Draw control
 //--------------------------------------------------------------------
+// Draw panel header as status bar
+
 // Draw background
 
 // Save size of the scrollbar slider
@@ -1368,7 +1439,7 @@ enum GuiIconName {
 
 // Draw arrows (using icon if available)
 
-// RICON_ARROW_DOWN_FILL
+// ICON_ARROW_DOWN_FILL
 
 //--------------------------------------------------------------------
 
@@ -1390,6 +1461,8 @@ enum GuiIconName {
 
 // Draw control
 //--------------------------------------------------------------------
+
+// in case we edit and text does not fit in the textbox show right aligned and character clipped, slower but working
 
 // Draw cursor
 
@@ -1424,6 +1497,10 @@ enum GuiIconName {
 // Only allow keys in range [48..57]
 
 // Delete text
+
+// NOTE: We are not clamp values until user input finishes
+//if (*value > maxValue) *value = maxValue;
+//else if (*value < minValue) *value = minValue;
 
 //--------------------------------------------------------------------
 
@@ -1583,50 +1660,6 @@ if ((lastSpaceCursorPos + lastSpaceWidth) > (textAreaBounds.x + textAreaBounds.w
 //--------------------------------------------------------------------
 
 //------------------------------------------------------------------
-
-// Scroll Bar control
-
-// Is the scrollbar horizontal or vertical?
-
-// The size (width or height depending on scrollbar type) of the spinner buttons
-
-// Arrow buttons [<] [>] [∧] [∨]
-
-// Actual area of the scrollbar excluding the arrow buttons
-
-// Slider bar that moves     --[///]-----
-
-// Normalize value
-
-// Calculate rectangles for all of the components
-
-// Make sure the slider won't get outside of the scrollbar
-
-// Make sure the slider won't get outside of the scrollbar
-
-// Update control
-//--------------------------------------------------------------------
-
-// Handle mouse wheel
-
-// Normalize value
-
-//--------------------------------------------------------------------
-
-// Draw control
-//--------------------------------------------------------------------
-// Draw the background
-
-// Draw the scrollbar active area background
-// Draw the slider bar
-
-// Draw arrows (using icon if available)
-
-// RICON_ARROW_UP_FILL / RICON_ARROW_LEFT_FILL
-
-// RICON_ARROW_DOWN_FILL / RICON_ARROW_RIGHT_FILL
-
-//--------------------------------------------------------------------
 
 // List View control
 
@@ -1794,10 +1827,14 @@ else if (IsKeyDown(KEY_DOWN))
 // Update control
 //--------------------------------------------------------------------
 
+// NOTE: Cell values must be rounded to int
+
 //--------------------------------------------------------------------
 
 // Draw control
 //--------------------------------------------------------------------
+
+// TODO: Draw background panel?
 
 // Draw vertical grid lines
 
@@ -1808,6 +1845,8 @@ else if (IsKeyDown(KEY_DOWN))
 //----------------------------------------------------------------------------------
 
 // Load raygui style file (.rgs)
+// NOTE: By default a binary file is expected, that file could contain a custom font,
+// in that case, custom font image atlas is GRAY+ALPHA and pixel data can be compressed (DEFLATE)
 
 // Try reading the files as text file first
 
@@ -1832,6 +1871,12 @@ else if (IsKeyDown(KEY_DOWN))
 // Load font white rectangle
 
 // Load font image parameters
+
+// Compressed font atlas image data (DEFLATE), it requires DecompressData()
+
+// Security check, dataUncompSize must match the provided fontImageUncompSize
+
+// Font atlas image data is not compressed
 
 // Load font recs data
 
@@ -1871,7 +1916,7 @@ else if (IsKeyDown(KEY_DOWN))
 
 // Load raygui icons file (.rgi)
 // NOTE: In case nameIds are required, they can be requested with loadIconsName,
-// they are returned as a guiIconsName[iconCount][RICON_MAX_NAME_LENGTH],
+// they are returned as a guiIconsName[iconCount][RAYGUI_ICON_MAX_NAME_LENGTH],
 // WARNING: guiIconsName[]][] memory should be manually freed!
 
 // Style File Structure (.rgi)
@@ -1903,30 +1948,33 @@ else if (IsKeyDown(KEY_DOWN))
 // Draw selected icon using rectangles pixel-by-pixel
 
 // Get icon bit data
-// NOTE: Bit data array grouped as unsigned int (ICON_SIZE*ICON_SIZE/32 elements)
+// NOTE: Bit data array grouped as unsigned int (RAYGUI_ICON_SIZE*RAYGUI_ICON_SIZE/32 elements)
 
 // Set icon bit data
-// NOTE: Data must be provided as unsigned int array (ICON_SIZE*ICON_SIZE/32 elements)
+// NOTE: Data must be provided as unsigned int array (RAYGUI_ICON_SIZE*RAYGUI_ICON_SIZE/32 elements)
+
+// Set icon scale (1 by default)
 
 // Set icon pixel value
 
-// This logic works for any RICON_SIZE pixels icons,
+// This logic works for any RAYGUI_ICON_SIZE pixels icons,
 // For example, in case of 16x16 pixels, every 2 lines fit in one unsigned int data element
 
 // Clear icon pixel value
 
-// This logic works for any RICON_SIZE pixels icons,
+// This logic works for any RAYGUI_ICON_SIZE pixels icons,
 // For example, in case of 16x16 pixels, every 2 lines fit in one unsigned int data element
 
 // Check icon pixel value
 
-// !RAYGUI_NO_RICONS
+// !RAYGUI_NO_ICONS
 
 //----------------------------------------------------------------------------------
 // Module specific Functions Definition
 //----------------------------------------------------------------------------------
-// Gui get text width using default font
-// NOTE: Icon is not considered here
+// Gui get text width considering icon
+
+// Make sure guiFont is set, GuiGetStyle() initializes it lazynessly
 
 // Get text bounds considering control bounds
 
@@ -1957,6 +2005,10 @@ else if (IsKeyDown(KEY_DOWN))
 //---------------------------------------------------------------------------------
 
 // NOTE: We get text size after icon has been processed
+// TODO: REVIEW: We consider text size in case of line breaks! -> MeasureTextEx() depends on raylib!
+
+//int textWidth = GetTextWidth(text);
+//int textHeight = GuiGetStyle(DEFAULT, TEXT_SIZE);
 
 // If text requires an icon, add size to measure
 
@@ -1988,8 +2040,8 @@ else if (IsKeyDown(KEY_DOWN))
 // NOTE: Current implementation returns a copy of the provided string with '\0' (string end delimiter)
 // inserted between strings defined by "delimiter" parameter. No memory is dynamically allocated,
 // all used memory is static... it has some limitations:
-//      1. Maximum number of possible split strings is set by TEXTSPLIT_MAX_TEXT_ELEMENTS
-//      2. Maximum size of text to split is TEXTSPLIT_MAX_TEXT_LENGTH
+//      1. Maximum number of possible split strings is set by RAYGUI_TEXTSPLIT_MAX_ITEMS
+//      2. Maximum size of text to split is RAYGUI_TEXTSPLIT_MAX_TEXT_SIZE
 // NOTE: Those definitions could be externally provided if required
 
 // Count how many substrings we have on text and point to every one
@@ -2023,6 +2075,50 @@ else if (IsKeyDown(KEY_DOWN))
 
 // NOTE: Comparing float values could not work properly
 
+// Scroll bar control (used by GuiScrollPanel())
+
+// Is the scrollbar horizontal or vertical?
+
+// The size (width or height depending on scrollbar type) of the spinner buttons
+
+// Arrow buttons [<] [>] [∧] [∨]
+
+// Actual area of the scrollbar excluding the arrow buttons
+
+// Slider bar that moves     --[///]-----
+
+// Normalize value
+
+// Calculate rectangles for all of the components
+
+// Make sure the slider won't get outside of the scrollbar
+
+// Make sure the slider won't get outside of the scrollbar
+
+// Update control
+//--------------------------------------------------------------------
+
+// Handle mouse wheel
+
+// Normalize value
+
+//--------------------------------------------------------------------
+
+// Draw control
+//--------------------------------------------------------------------
+// Draw the background
+
+// Draw the scrollbar active area background
+// Draw the slider bar
+
+// Draw arrows (using icon if available)
+
+// ICON_ARROW_UP_FILL / ICON_ARROW_LEFT_FILL
+
+// ICON_ARROW_DOWN_FILL / ICON_ARROW_RIGHT_FILL
+
+//--------------------------------------------------------------------
+
 // Returns a Color struct from hexadecimal value
 
 // Returns hexadecimal value for a Color
@@ -2036,16 +2132,13 @@ else if (IsKeyDown(KEY_DOWN))
 // Draw rectangle with vertical gradient fill color
 // NOTE: This function is only used by GuiColorPicker()
 
-// Size of static buffer: TextSplit()
-// Size of static pointers array: TextSplit()
-
 // Split string into multiple strings
 
 // NOTE: Current implementation returns a copy of the provided string with '\0' (string end delimiter)
 // inserted between strings defined by "delimiter" parameter. No memory is dynamically allocated,
 // all used memory is static... it has some limitations:
-//      1. Maximum number of possible split strings is set by TEXTSPLIT_MAX_SUBSTRINGS_COUNT
-//      2. Maximum size of text to split is TEXTSPLIT_MAX_TEXT_BUFFER_LENGTH
+//      1. Maximum number of possible split strings is set by RAYGUI_TEXTSPLIT_MAX_ITEMS
+//      2. Maximum size of text to split is RAYGUI_TEXTSPLIT_MAX_TEXT_SIZE
 
 // Count how many substrings we have on text and point to every one
 
