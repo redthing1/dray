@@ -28,7 +28,7 @@ if [ ! -f $LIB_FILE ] || [ "$1" == "-f" ]; then
     fi
 
     cd $SOURCETREE_DIR
-    git checkout 4.0.0_patch
+    git checkout 4.2.0_patch
     git pull
     git submodule update --init --recursive
 
