@@ -8,7 +8,7 @@
 
 HOST="dray"
 LIB_NAME="raylib"
-SOURCETREE_URL="https://github.com/xdrie/raylib.git"
+SOURCETREE_URL="https://github.com/redthing1/raylib.git"
 SOURCETREE_DIR="raylib_source"
 LIB_FILE="libraylib.a"
 

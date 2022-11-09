@@ -1,6 +1,6 @@
 name "example"
 description "dray example"
-authors "xdrie"
-copyright "Copyright © 2020, xdrie"
+authors "redthing1"
+copyright "Copyright © 2020, redthing1"
 license "proprietary"
 dependency "dray" path=".."
