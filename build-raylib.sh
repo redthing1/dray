@@ -14,42 +14,41 @@ SOURCETREE_DIR="raylib_source"
 SOURCETREE_BRANCH="4.2.0_patch"
 LIB_FILE_1="libraylib.a"
 
+BUILD_ARGS=$@
+
 PACKAGE_DIR=$(dirname "$0")
 cd "$PACKAGE_DIR"
 pushd .
-if [ ! -f $LIB_FILE_1 ] || [ "$1" == "-f" ]; then
-    echo "[$HOST] building $LIB_NAME library..."
 
-    # delete $SOURCETREE_DIR to force re-fetch source
-    if [ -d $SOURCETREE_DIR ] 
-    then
-        echo "[$HOST] source folder already exists, using it." 
-    else
-        echo "[$HOST] getting source to build $LIB_NAME" 
-        # git clone $SOURCETREE_URL $SOURCETREE_DIR
-        git clone --depth 1 --branch $SOURCETREE_BRANCH $SOURCETREE_URL $SOURCETREE_DIR
-    fi
+echo "[$HOST] building $LIB_NAME library..."
 
-    cd $SOURCETREE_DIR
-    git submodule update --init --recursive
-
-    echo "[$HOST] starting build of $LIB_NAME" 
-    #
-    # START BUILD
-    #
-    # build the library
-    cd src
-    make -j$(nproc)
-    #
-    # END BUILD
-    #
-
-    echo "[$HOST] finished build of $LIB_NAME" 
-
-    echo "[$HOST] copying $LIB_NAME binary ($LIB_FILE_1) to $PACKAGE_DIR"
-    cp -v $(pwd)/$LIB_FILE_1 $PACKAGE_DIR/$LIB_FILE_1
-    popd
+# delete $SOURCETREE_DIR to force re-fetch source
+if [ -d $SOURCETREE_DIR ] 
+then
+    echo "[$HOST] source folder already exists, using it." 
 else
-    # delete $LIB_FILE_1 to force rebuild
-    echo "[$HOST] library $LIB_NAME already built."
+    echo "[$HOST] getting source to build $LIB_NAME" 
+    # git clone $SOURCETREE_URL $SOURCETREE_DIR
+    git clone --depth 1 --branch $SOURCETREE_BRANCH $SOURCETREE_URL $SOURCETREE_DIR
 fi
+
+cd $SOURCETREE_DIR
+git submodule update --init --recursive
+
+echo "[$HOST] starting build of $LIB_NAME" 
+#
+# START BUILD
+#
+# build the library
+cd src
+make clean
+make -j$(nproc) $BUILD_ARGS
+#
+# END BUILD
+#
+
+echo "[$HOST] finished build of $LIB_NAME" 
+
+echo "[$HOST] copying $LIB_NAME binary ($LIB_FILE_1) to $PACKAGE_DIR"
+ln -vrfs $(pwd)/$LIB_FILE_1 $PACKAGE_DIR/$LIB_FILE_1
+popd

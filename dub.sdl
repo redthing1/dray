@@ -6,10 +6,24 @@ license "apache-2.0"
 dependency "fluent-asserts" version="~>0.13.3"
 targetType "library"
 
-configuration "default" {
-    # on posix platforms, link to raylib static library
+configuration "desktop-gl33" {
     lflags "-L$PACKAGE_DIR" "$PACKAGE_DIR/libraylib.a" platform="posix"
-    preGenerateCommands "bash $PACKAGE_DIR/build-raylib.sh" platform="posix"
+    preBuildCommands "bash $PACKAGE_DIR/build-raylib.sh PLATFORM=PLATFORM_DESKTOP GRAPHICS=GRAPHICS_API_OPENGL_33" platform="posix"
+}
+
+configuration "desktop-gl21" {
+    lflags "-L$PACKAGE_DIR" "$PACKAGE_DIR/libraylib.a" platform="posix"
+    preBuildCommands "bash $PACKAGE_DIR/build-raylib.sh PLATFORM=PLATFORM_DESKTOP GRAPHICS=GRAPHICS_API_OPENGL_21" platform="posix"
+}
+
+configuration "desktop-gles2" {
+    lflags "-L$PACKAGE_DIR" "$PACKAGE_DIR/libraylib.a" platform="posix"
+    preBuildCommands "bash $PACKAGE_DIR/build-raylib.sh PLATFORM=PLATFORM_DESKTOP GRAPHICS=GRAPHICS_API_OPENGL_ES2" platform="posix"
+}
+
+configuration "drm-gles2" {
+    lflags "-L$PACKAGE_DIR" "$PACKAGE_DIR/libraylib.a" platform="posix"
+    preBuildCommands "bash $PACKAGE_DIR/build-raylib.sh PLATFORM=PLATFORM_DRM GRAPHICS=GRAPHICS_API_OPENGL_ES2" platform="posix"
 }
 
 configuration "windows" {
@@ -19,9 +33,7 @@ configuration "windows" {
 
 configuration "windows-cross" {
     # on windows platforms, link to raylib static library
-    // lflags "-L$PACKAGE_DIR" "$PACKAGE_DIR/libraylib.lib" platform="windows"
     lflags "-L$WINLIB_BASE" "-L$WINLIB_MINGW" platform="windows"
     sourceFiles "$PACKAGE_DIR/raylib.lib" platform="windows"
     sourceFiles "$PACKAGE_DIR/WinMM.lib" platform="windows"
-    // preGenerateCommands "$PACKAGE_DIR/build-raylib.bat" platform="windows"
 }
