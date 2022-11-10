@@ -8,7 +8,6 @@ patches:
 + `raygui` included
 + HIDPI enabled
 + `physac` included
-+ coming soon: OpenVR
 
 ## usage
 
