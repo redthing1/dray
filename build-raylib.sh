@@ -7,6 +7,7 @@
 
 set -e
 
+# package config
 HOST="dray"
 LIB_NAME="raylib"
 SOURCETREE_URL="https://github.com/redthing1/raylib"
@@ -20,14 +21,20 @@ PACKAGE_DIR=$(dirname "$0")
 cd "$PACKAGE_DIR"
 pushd .
 
+# utility vars
+LN="ln"
+
+if [[ "$OSTYPE" == "darwin"* ]]; then
+    LN="gln"
+fi
+
 echo "[$HOST] building $LIB_NAME library..."
 
 # delete $SOURCETREE_DIR to force re-fetch source
-if [ -d $SOURCETREE_DIR ] 
-then
-    echo "[$HOST] source folder already exists, using it." 
+if [ -d $SOURCETREE_DIR ]; then
+    echo "[$HOST] source folder already exists, using it."
 else
-    echo "[$HOST] getting source to build $LIB_NAME" 
+    echo "[$HOST] getting source to build $LIB_NAME"
     # git clone $SOURCETREE_URL $SOURCETREE_DIR
     git clone --depth 1 --branch $SOURCETREE_BRANCH $SOURCETREE_URL $SOURCETREE_DIR
 fi
@@ -35,7 +42,7 @@ fi
 cd $SOURCETREE_DIR
 git submodule update --init --recursive
 
-echo "[$HOST] starting build of $LIB_NAME" 
+echo "[$HOST] starting build of $LIB_NAME"
 #
 # START BUILD
 #
@@ -47,8 +54,8 @@ make -j$(nproc) $BUILD_ARGS
 # END BUILD
 #
 
-echo "[$HOST] finished build of $LIB_NAME" 
+echo "[$HOST] finished build of $LIB_NAME"
 
 echo "[$HOST] copying $LIB_NAME binary ($LIB_FILE_1) to $PACKAGE_DIR"
-ln -vrfs $(pwd)/$LIB_FILE_1 $PACKAGE_DIR/$LIB_FILE_1
+$LN -vrfs $(pwd)/$LIB_FILE_1 $PACKAGE_DIR/$LIB_FILE_1
 popd
