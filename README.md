@@ -2,7 +2,7 @@
 
 # dray
 
-dlang bindings to [raylib](https://github.com/redthing1/raylib) **v4.0.0** (based on the official upstream [4.0.0 release](https://github.com/raysan5/raylib/releases/tag/4.0.0)).
+dlang bindings to [raylib](https://github.com/redthing1/raylib) **v4.2.0** (based on the official upstream [4.2.0 release](https://github.com/raysan5/raylib/releases/tag/4.2.0)).
 
 patches:
 + `raygui` included
@@ -27,7 +27,7 @@ Use the `lib` directory of the archive as `WINLIB_BASE` and the `lib/mingw` dire
 
 Then place `raylib.lib` and `WinMM.lib` in the `dray` package directory.
 You can get raylib artifacts for dray windows [here](https://github.com/redthing1/raylib/actions/workflows/windows.yml).
-You can get `WinMM.lib`, `MSVCRT.lib`, `OLDNAMES.lib` [here](https://github.com/redthing1/dray/releases/download/v4.0.0-r3/winlibs_extra.7z). You should place those in your `WINLIB_BASE` path.
+You can get `WinMM.lib`, `MSVCRT.lib`, `OLDNAMES.lib` [here](https://github.com/redthing1/dray/releases/download/v4.2.0-r3/winlibs_extra.7z). You should place those in your `WINLIB_BASE` path.
 
 ```sh
 WINLIB_BASE="/path/to/ldc2-1.28.1-windows-x64/ldc2-1.28.1-windows-x64/lib/" WINLIB_MINGW="/path/to/Downloads/ldc2-1.28.1-windows-x64/ldc2-1.28.1-windows-x64/lib/mingw" dub build --compiler ldc2 --arch=x86_64-windows-msvc
