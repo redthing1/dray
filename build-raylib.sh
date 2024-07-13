@@ -12,7 +12,7 @@ HOST="dray"
 LIB_NAME="raylib"
 SOURCETREE_URL="https://github.com/redthing1/raylib"
 SOURCETREE_DIR="raylib_source"
-SOURCETREE_BRANCH="4.2.0_patch"
+SOURCETREE_BRANCH="5.0.0_patch"
 LIB_FILE_1="libraylib.a"
 
 BUILD_ARGS=$@
