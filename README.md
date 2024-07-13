@@ -2,7 +2,11 @@
 
 # dray
 
-dlang bindings to [raylib](https://github.com/xdrie/raylib) **v3.5.0**
+dlang bindings to [raylib](https://github.com/xdrie/raylib) **v3.5.0** (based on the official upstream [3.5.0 release](https://github.com/raysan5/raylib/releases/tag/3.5.0)).
+
+some minor changes are included:
++ `raygui` included
++ HIDPI enabled
 
 ## usage
 
