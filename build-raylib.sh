@@ -3,7 +3,7 @@
 DIR=$(dirname "$0")
 cd "$DIR"
 if [ ! -f libraylib.a ] || [ "$1" == "-f" ]; then
-    echo "Building C Library..."
+    echo "[dray] Building Raylib static library..."
 
     # rm -rf raylib_source
     git clone https://github.com/xdrie/raylib.git raylib_source
@@ -20,5 +20,5 @@ if [ ! -f libraylib.a ] || [ "$1" == "-f" ]; then
     # rm -rf raylib_source
 else
     # delete libraylib.a to force rebuild
-    echo "Library already built."
+    echo "[dray] Raylib library already built."
 fi
