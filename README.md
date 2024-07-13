@@ -2,11 +2,13 @@
 
 # dray
 
-dlang bindings to [raylib](https://github.com/redthing1/raylib) **v4.2.0** (based on the official upstream [4.2.0 release](https://github.com/raysan5/raylib/releases/tag/4.2.0)).
+dlang bindings to [redthing1 raylib](https://github.com/redthing1/raylib) **v4.2.0** (based on the official upstream [4.2.0 release](https://github.com/raysan5/raylib/releases/tag/4.2.0)).
 
 patches:
 + `raygui` included
 + HIDPI enabled
++ `physac` included
++ coming soon: OpenVR
 
 ## usage
 
