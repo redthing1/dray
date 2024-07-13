@@ -1,3 +1,5 @@
+module easings;
+
 /*******************************************************************************************
 *
 *   raylib easings (header only file)
@@ -79,7 +81,7 @@
 *
 **********************************************************************************************/
 
-extern (C):
+extern (C) @nogc nothrow:
 pragma(inline): // NOTE: By default, compile functions as static inline
 
 import core.stdc.math; // Required for: sinf(), cosf(), sqrt(), pow()
