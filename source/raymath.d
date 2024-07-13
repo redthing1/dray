@@ -81,32 +81,44 @@ struct float16
 
 import core.stdc.math; // Required for: sinf(), cosf(), sqrtf(), tan(), fabs()
 
+pragma(inline, true):
+
 //----------------------------------------------------------------------------------
 // Module Functions Definition - Utils math
 //----------------------------------------------------------------------------------
+
 // Clamp float value
 static float Clamp(float value, float min, float max)
 {
-    const float res = value < min ? min : value;
-    return res > max ? max : res;
+    float result = (value < min)? min : value;
+
+    if (result > max) result = max;
+
+    return result;
 }
 
 // Calculate linear interpolation between two floats
 static float Lerp(float start, float end, float amount)
 {
-    return start + amount*(end - start);
+    float result = start + amount*(end - start);
+
+    return result;
 }
 
 // Normalize input value within input range
 static float Normalize(float value, float start, float end)
 {
-    return (value - start) / (end - start);
+    float result = (value - start)/(end - start);
+
+    return result;
 }
 
 // Remap input value within input range to output range
-static float Remap(float value, float inputStart, float inputEnd, float outputStart, float outputEnd) 
+static float Remap(float value, float inputStart, float inputEnd, float outputStart, float outputEnd)
 {
-    return (value - inputStart) / (inputEnd - inputStart) * (outputEnd - outputStart) + outputStart;
+    float result =(value - inputStart)/(inputEnd - inputStart)*(outputEnd - outputStart) + outputStart;
+
+    return result;
 }
 
 //----------------------------------------------------------------------------------
@@ -117,6 +129,7 @@ static float Remap(float value, float inputStart, float inputEnd, float outputSt
 static Vector2 Vector2Zero()
 {
     Vector2 result = { 0.0f, 0.0f };
+
     return result;
 }
 
@@ -124,6 +137,7 @@ static Vector2 Vector2Zero()
 static Vector2 Vector2One()
 {
     Vector2 result = { 1.0f, 1.0f };
+
     return result;
 }
 
@@ -131,6 +145,7 @@ static Vector2 Vector2One()
 static Vector2 Vector2Add(Vector2 v1, Vector2 v2)
 {
     Vector2 result = { v1.x + v2.x, v1.y + v2.y };
+
     return result;
 }
 
@@ -138,6 +153,7 @@ static Vector2 Vector2Add(Vector2 v1, Vector2 v2)
 static Vector2 Vector2AddValue(Vector2 v, float add)
 {
     Vector2 result = { v.x + add, v.y + add };
+
     return result;
 }
 
@@ -145,6 +161,7 @@ static Vector2 Vector2AddValue(Vector2 v, float add)
 static Vector2 Vector2Subtract(Vector2 v1, Vector2 v2)
 {
     Vector2 result = { v1.x - v2.x, v1.y - v2.y };
+
     return result;
 }
 
@@ -152,6 +169,7 @@ static Vector2 Vector2Subtract(Vector2 v1, Vector2 v2)
 static Vector2 Vector2SubtractValue(Vector2 v, float sub)
 {
     Vector2 result = { v.x - sub, v.y - sub };
+
     return result;
 }
 
@@ -159,6 +177,7 @@ static Vector2 Vector2SubtractValue(Vector2 v, float sub)
 static float Vector2Length(Vector2 v)
 {
     float result = sqrtf((v.x*v.x) + (v.y*v.y));
+
     return result;
 }
 
@@ -166,6 +185,7 @@ static float Vector2Length(Vector2 v)
 static float Vector2LengthSqr(Vector2 v)
 {
     float result = (v.x*v.x) + (v.y*v.y);
+
     return result;
 }
 
@@ -173,6 +193,7 @@ static float Vector2LengthSqr(Vector2 v)
 static float Vector2DotProduct(Vector2 v1, Vector2 v2)
 {
     float result = (v1.x*v2.x + v1.y*v2.y);
+
     return result;
 }
 
@@ -180,6 +201,7 @@ static float Vector2DotProduct(Vector2 v1, Vector2 v2)
 static float Vector2Distance(Vector2 v1, Vector2 v2)
 {
     float result = sqrtf((v1.x - v2.x)*(v1.x - v2.x) + (v1.y - v2.y)*(v1.y - v2.y));
+
     return result;
 }
 
@@ -187,7 +209,9 @@ static float Vector2Distance(Vector2 v1, Vector2 v2)
 static float Vector2Angle(Vector2 v1, Vector2 v2)
 {
     float result = atan2f(v2.y - v1.y, v2.x - v1.x)*(180.0f/PI);
+
     if (result < 0) result += 360.0f;
+
     return result;
 }
 
@@ -195,6 +219,7 @@ static float Vector2Angle(Vector2 v1, Vector2 v2)
 static Vector2 Vector2Scale(Vector2 v, float scale)
 {
     Vector2 result = { v.x*scale, v.y*scale };
+
     return result;
 }
 
@@ -202,6 +227,7 @@ static Vector2 Vector2Scale(Vector2 v, float scale)
 static Vector2 Vector2Multiply(Vector2 v1, Vector2 v2)
 {
     Vector2 result = { v1.x*v2.x, v1.y*v2.y };
+
     return result;
 }
 
@@ -209,6 +235,7 @@ static Vector2 Vector2Multiply(Vector2 v1, Vector2 v2)
 static Vector2 Vector2Negate(Vector2 v)
 {
     Vector2 result = { -v.x, -v.y };
+
     return result;
 }
 
@@ -216,13 +243,22 @@ static Vector2 Vector2Negate(Vector2 v)
 static Vector2 Vector2Divide(Vector2 v1, Vector2 v2)
 {
     Vector2 result = { v1.x/v2.x, v1.y/v2.y };
+
     return result;
 }
 
 // Normalize provided vector
 static Vector2 Vector2Normalize(Vector2 v)
 {
-    Vector2 result = Vector2Scale(v, 1/Vector2Length(v));
+    Vector2 result = { 0 };
+    float length = sqrtf((v.x*v.x) + (v.y*v.y));
+
+    if (length > 0)
+    {
+        result.x = v.x*1.0f/length;
+        result.y = v.y*1.0f/length;
+    }
+
     return result;
 }
 
@@ -237,11 +273,27 @@ static Vector2 Vector2Lerp(Vector2 v1, Vector2 v2, float amount)
     return result;
 }
 
-// Rotate Vector by float in Degrees.
-static Vector2 Vector2Rotate(Vector2 v, float degs)
+// Calculate reflected vector to normal
+static Vector2 Vector2Reflect(Vector2 v, Vector2 normal)
 {
-    float rads = degs*DEG2RAD;
-    Vector2 result = {v.x * cosf(rads) - v.y * sinf(rads) , v.x * sinf(rads) + v.y * cosf(rads) };
+    Vector2 result = { 0 };
+
+    float dotProduct = (v.x*normal.x + v.y*normal.y); // Dot product
+
+    result.x = v.x - (2.0f*normal.x)*dotProduct;
+    result.y = v.y - (2.0f*normal.y)*dotProduct;
+
+    return result;
+}
+
+// Rotate vector by angle
+static Vector2 Vector2Rotate(Vector2 v, float angle)
+{
+    Vector2 result = { 0 };
+
+    result.x = v.x*cosf(angle) - v.y*sinf(angle);
+    result.y = v.x*sinf(angle) + v.y*cosf(angle);
+
     return result;
 }
 
@@ -249,17 +301,18 @@ static Vector2 Vector2Rotate(Vector2 v, float degs)
 static Vector2 Vector2MoveTowards(Vector2 v, Vector2 target, float maxDistance)
 {
     Vector2 result = { 0 };
+
     float dx = target.x - v.x;
     float dy = target.y - v.y;
     float value = (dx*dx) + (dy*dy);
-    
-    if ((value == 0) || ((maxDistance >= 0) && (value <= maxDistance*maxDistance))) result = target;
-    
+
+    if ((value == 0) || ((maxDistance >= 0) && (value <= maxDistance*maxDistance))) return target;
+
     float dist = sqrtf(value);
-    
+
     result.x = v.x + dx/dist*maxDistance;
     result.y = v.y + dy/dist*maxDistance;
-    
+
     return result;
 }
 
@@ -271,6 +324,7 @@ static Vector2 Vector2MoveTowards(Vector2 v, Vector2 target, float maxDistance)
 static Vector3 Vector3Zero()
 {
     Vector3 result = { 0.0f, 0.0f, 0.0f };
+
     return result;
 }
 
@@ -278,6 +332,7 @@ static Vector3 Vector3Zero()
 static Vector3 Vector3One()
 {
     Vector3 result = { 1.0f, 1.0f, 1.0f };
+
     return result;
 }
 
@@ -285,6 +340,7 @@ static Vector3 Vector3One()
 static Vector3 Vector3Add(Vector3 v1, Vector3 v2)
 {
     Vector3 result = { v1.x + v2.x, v1.y + v2.y, v1.z + v2.z };
+
     return result;
 }
 
@@ -292,6 +348,7 @@ static Vector3 Vector3Add(Vector3 v1, Vector3 v2)
 static Vector3 Vector3AddValue(Vector3 v, float add)
 {
     Vector3 result = { v.x + add, v.y + add, v.z + add };
+
     return result;
 }
 
@@ -299,6 +356,7 @@ static Vector3 Vector3AddValue(Vector3 v, float add)
 static Vector3 Vector3Subtract(Vector3 v1, Vector3 v2)
 {
     Vector3 result = { v1.x - v2.x, v1.y - v2.y, v1.z - v2.z };
+
     return result;
 }
 
@@ -306,6 +364,7 @@ static Vector3 Vector3Subtract(Vector3 v1, Vector3 v2)
 static Vector3 Vector3SubtractValue(Vector3 v, float sub)
 {
     Vector3 result = { v.x - sub, v.y - sub, v.z - sub };
+
     return result;
 }
 
@@ -313,6 +372,7 @@ static Vector3 Vector3SubtractValue(Vector3 v, float sub)
 static Vector3 Vector3Scale(Vector3 v, float scalar)
 {
     Vector3 result = { v.x*scalar, v.y*scalar, v.z*scalar };
+
     return result;
 }
 
@@ -320,6 +380,7 @@ static Vector3 Vector3Scale(Vector3 v, float scalar)
 static Vector3 Vector3Multiply(Vector3 v1, Vector3 v2)
 {
     Vector3 result = { v1.x*v2.x, v1.y*v2.y, v1.z*v2.z };
+
     return result;
 }
 
@@ -327,6 +388,7 @@ static Vector3 Vector3Multiply(Vector3 v1, Vector3 v2)
 static Vector3 Vector3CrossProduct(Vector3 v1, Vector3 v2)
 {
     Vector3 result = { v1.y*v2.z - v1.z*v2.y, v1.z*v2.x - v1.x*v2.z, v1.x*v2.y - v1.y*v2.x };
+
     return result;
 }
 
@@ -351,7 +413,10 @@ static Vector3 Vector3Perpendicular(Vector3 v)
         cardinalAxis = tmp;
     }
 
-    result = Vector3CrossProduct(v, cardinalAxis);
+    // Cross product between vectors
+    result.x = v.y*cardinalAxis.z - v.z*cardinalAxis.y;
+    result.y = v.z*cardinalAxis.x - v.x*cardinalAxis.z;
+    result.z = v.x*cardinalAxis.y - v.y*cardinalAxis.x;
 
     return result;
 }
@@ -360,6 +425,7 @@ static Vector3 Vector3Perpendicular(Vector3 v)
 static float Vector3Length(const Vector3 v)
 {
     float result = sqrtf(v.x*v.x + v.y*v.y + v.z*v.z);
+
     return result;
 }
 
@@ -367,6 +433,7 @@ static float Vector3Length(const Vector3 v)
 static float Vector3LengthSqr(const Vector3 v)
 {
     float result = v.x*v.x + v.y*v.y + v.z*v.z;
+
     return result;
 }
 
@@ -374,16 +441,35 @@ static float Vector3LengthSqr(const Vector3 v)
 static float Vector3DotProduct(Vector3 v1, Vector3 v2)
 {
     float result = (v1.x*v2.x + v1.y*v2.y + v1.z*v2.z);
+
     return result;
 }
 
 // Calculate distance between two vectors
 static float Vector3Distance(Vector3 v1, Vector3 v2)
 {
+    float result = 0.0f;
+
     float dx = v2.x - v1.x;
     float dy = v2.y - v1.y;
     float dz = v2.z - v1.z;
-    float result = sqrtf(dx*dx + dy*dy + dz*dz);
+    result = sqrtf(dx*dx + dy*dy + dz*dz);
+
+    return result;
+}
+
+// Calculate angle between two vectors in XY and XZ
+static Vector2 Vector3Angle(Vector3 v1, Vector3 v2)
+{
+    Vector2 result = { 0 };
+
+    float dx = v2.x - v1.x;
+    float dy = v2.y - v1.y;
+    float dz = v2.z - v1.z;
+
+    result.x = atan2f(dx, dz);                      // Angle in XZ
+    result.y = atan2f(dy, sqrtf(dx*dx + dz*dz));    // Angle in XY
+
     return result;
 }
 
@@ -391,6 +477,7 @@ static float Vector3Distance(Vector3 v1, Vector3 v2)
 static Vector3 Vector3Negate(Vector3 v)
 {
     Vector3 result = { -v.x, -v.y, -v.z };
+
     return result;
 }
 
@@ -398,6 +485,7 @@ static Vector3 Vector3Negate(Vector3 v)
 static Vector3 Vector3Divide(Vector3 v1, Vector3 v2)
 {
     Vector3 result = { v1.x/v2.x, v1.y/v2.y, v1.z/v2.z };
+
     return result;
 }
 
@@ -406,10 +494,9 @@ static Vector3 Vector3Normalize(Vector3 v)
 {
     Vector3 result = v;
 
-    float length, ilength;
-    length = Vector3Length(v);
+    float length = sqrtf(v.x*v.x + v.y*v.y + v.z*v.z);
     if (length == 0.0f) length = 1.0f;
-    ilength = 1.0f/length;
+    float ilength = 1.0f/length;
 
     result.x *= ilength;
     result.y *= ilength;
@@ -423,16 +510,41 @@ static Vector3 Vector3Normalize(Vector3 v)
 // Gram-Schmidt function implementation
 static void Vector3OrthoNormalize(Vector3 *v1, Vector3 *v2)
 {
-    *v1 = Vector3Normalize(*v1);
-    Vector3 vn = Vector3CrossProduct(*v1, *v2);
-    vn = Vector3Normalize(vn);
-    *v2 = Vector3CrossProduct(vn, *v1);
+    float length = 0.0f;
+    float ilength = 0.0f;
+
+    // Vector3Normalize(*v1);
+    Vector3 v = *v1;
+    length = sqrtf(v.x*v.x + v.y*v.y + v.z*v.z);
+    if (length == 0.0f) length = 1.0f;
+    ilength = 1.0f/length;
+    v1.x *= ilength;
+    v1.y *= ilength;
+    v1.z *= ilength;
+
+    // Vector3CrossProduct(*v1, *v2)
+    Vector3 vn1 = { v1.y*v2.z - v1.z*v2.y, v1.z*v2.x - v1.x*v2.z, v1.x*v2.y - v1.y*v2.x };
+
+    // Vector3Normalize(vn1);
+    v = vn1;
+    length = sqrtf(v.x*v.x + v.y*v.y + v.z*v.z);
+    if (length == 0.0f) length = 1.0f;
+    ilength = 1.0f/length;
+    vn1.x *= ilength;
+    vn1.y *= ilength;
+    vn1.z *= ilength;
+
+    // Vector3CrossProduct(vn1, *v1)
+    Vector3 vn2 = { vn1.y*v1.z - vn1.z*v1.y, vn1.z*v1.x - vn1.x*v1.z, vn1.x*v1.y - vn1.y*v1.x };
+
+    *v2 = vn2;
 }
 
 // Transforms a Vector3 by a given Matrix
 static Vector3 Vector3Transform(Vector3 v, Matrix mat)
 {
     Vector3 result = { 0 };
+
     float x = v.x;
     float y = v.y;
     float z = v.z;
@@ -471,13 +583,13 @@ static Vector3 Vector3Lerp(Vector3 v1, Vector3 v2, float amount)
 // Calculate reflected vector to normal
 static Vector3 Vector3Reflect(Vector3 v, Vector3 normal)
 {
-    // I is the original vector
-    // N is the normal of the incident plane
-    // R = I - (2*N*( DotProduct[ I,N] ))
-
     Vector3 result = { 0 };
 
-    float dotProduct = Vector3DotProduct(v, normal);
+    // I is the original vector
+    // N is the normal of the incident plane
+    // R = I - (2*N*(DotProduct[I, N]))
+
+    float dotProduct = (v.x*normal.x + v.y*normal.y + v.z*normal.z);
 
     result.x = v.x - (2.0f*normal.x)*dotProduct;
     result.y = v.y - (2.0f*normal.y)*dotProduct;
@@ -486,7 +598,7 @@ static Vector3 Vector3Reflect(Vector3 v, Vector3 normal)
     return result;
 }
 
-// Return min value for each pair of components
+// Get min value for each pair of components
 static Vector3 Vector3Min(Vector3 v1, Vector3 v2)
 {
     Vector3 result = { 0 };
@@ -498,7 +610,7 @@ static Vector3 Vector3Min(Vector3 v1, Vector3 v2)
     return result;
 }
 
-// Return max value for each pair of components
+// Get max value for each pair of components
 static Vector3 Vector3Max(Vector3 v1, Vector3 v2)
 {
     Vector3 result = { 0 };
@@ -514,20 +626,18 @@ static Vector3 Vector3Max(Vector3 v1, Vector3 v2)
 // NOTE: Assumes P is on the plane of the triangle
 static Vector3 Vector3Barycenter(Vector3 p, Vector3 a, Vector3 b, Vector3 c)
 {
-    //Vector v0 = b - a, v1 = c - a, v2 = p - a;
+    Vector3 result = { 0 };
 
-    Vector3 v0 = Vector3Subtract(b, a);
-    Vector3 v1 = Vector3Subtract(c, a);
-    Vector3 v2 = Vector3Subtract(p, a);
-    float d00 = Vector3DotProduct(v0, v0);
-    float d01 = Vector3DotProduct(v0, v1);
-    float d11 = Vector3DotProduct(v1, v1);
-    float d20 = Vector3DotProduct(v2, v0);
-    float d21 = Vector3DotProduct(v2, v1);
+    Vector3 v0 = { b.x - a.x, b.y - a.y, b.z - a.z };   // Vector3Subtract(b, a)
+    Vector3 v1 = { c.x - a.x, c.y - a.y, c.z - a.z };   // Vector3Subtract(c, a)
+    Vector3 v2 = { p.x - a.x, p.y - a.y, p.z - a.z };   // Vector3Subtract(p, a)
+    float d00 = (v0.x*v0.x + v0.y*v0.y + v0.z*v0.z);    // Vector3DotProduct(v0, v0)
+    float d01 = (v0.x*v1.x + v0.y*v1.y + v0.z*v1.z);    // Vector3DotProduct(v0, v1)
+    float d11 = (v1.x*v1.x + v1.y*v1.y + v1.z*v1.z);    // Vector3DotProduct(v1, v1)
+    float d20 = (v2.x*v0.x + v2.y*v0.y + v2.z*v0.z);    // Vector3DotProduct(v2, v0)
+    float d21 = (v2.x*v1.x + v2.y*v1.y + v2.z*v1.z);    // Vector3DotProduct(v2, v1)
 
     float denom = d00*d11 - d01*d01;
-
-    Vector3 result = { 0 };
 
     result.y = (d11*d20 - d01*d21)/denom;
     result.z = (d00*d21 - d01*d20)/denom;
@@ -536,7 +646,91 @@ static Vector3 Vector3Barycenter(Vector3 p, Vector3 a, Vector3 b, Vector3 c)
     return result;
 }
 
-// Returns Vector3 as float array
+// Projects a Vector3 from screen space into object space
+// NOTE: We are avoiding calling other raymath functions despite available
+static Vector3 Vector3Unproject(Vector3 source, Matrix projection, Matrix view)
+{
+    Vector3 result = { 0 };
+
+    // Calculate unproject matrix (multiply view patrix by projection matrix) and invert it
+    Matrix matViewProj = {      // MatrixMultiply(view, projection);
+        view.m0*projection.m0 + view.m1*projection.m4 + view.m2*projection.m8 + view.m3*projection.m12,
+        view.m0*projection.m1 + view.m1*projection.m5 + view.m2*projection.m9 + view.m3*projection.m13,
+        view.m0*projection.m2 + view.m1*projection.m6 + view.m2*projection.m10 + view.m3*projection.m14,
+        view.m0*projection.m3 + view.m1*projection.m7 + view.m2*projection.m11 + view.m3*projection.m15,
+        view.m4*projection.m0 + view.m5*projection.m4 + view.m6*projection.m8 + view.m7*projection.m12,
+        view.m4*projection.m1 + view.m5*projection.m5 + view.m6*projection.m9 + view.m7*projection.m13,
+        view.m4*projection.m2 + view.m5*projection.m6 + view.m6*projection.m10 + view.m7*projection.m14,
+        view.m4*projection.m3 + view.m5*projection.m7 + view.m6*projection.m11 + view.m7*projection.m15,
+        view.m8*projection.m0 + view.m9*projection.m4 + view.m10*projection.m8 + view.m11*projection.m12,
+        view.m8*projection.m1 + view.m9*projection.m5 + view.m10*projection.m9 + view.m11*projection.m13,
+        view.m8*projection.m2 + view.m9*projection.m6 + view.m10*projection.m10 + view.m11*projection.m14,
+        view.m8*projection.m3 + view.m9*projection.m7 + view.m10*projection.m11 + view.m11*projection.m15,
+        view.m12*projection.m0 + view.m13*projection.m4 + view.m14*projection.m8 + view.m15*projection.m12,
+        view.m12*projection.m1 + view.m13*projection.m5 + view.m14*projection.m9 + view.m15*projection.m13,
+        view.m12*projection.m2 + view.m13*projection.m6 + view.m14*projection.m10 + view.m15*projection.m14,
+        view.m12*projection.m3 + view.m13*projection.m7 + view.m14*projection.m11 + view.m15*projection.m15 };
+
+    // Calculate inverted matrix . MatrixInvert(matViewProj);
+    // Cache the matrix values (speed optimization)
+    float a00 = matViewProj.m0, a01 = matViewProj.m1, a02 = matViewProj.m2, a03 = matViewProj.m3;
+    float a10 = matViewProj.m4, a11 = matViewProj.m5, a12 = matViewProj.m6, a13 = matViewProj.m7;
+    float a20 = matViewProj.m8, a21 = matViewProj.m9, a22 = matViewProj.m10, a23 = matViewProj.m11;
+    float a30 = matViewProj.m12, a31 = matViewProj.m13, a32 = matViewProj.m14, a33 = matViewProj.m15;
+
+    float b00 = a00*a11 - a01*a10;
+    float b01 = a00*a12 - a02*a10;
+    float b02 = a00*a13 - a03*a10;
+    float b03 = a01*a12 - a02*a11;
+    float b04 = a01*a13 - a03*a11;
+    float b05 = a02*a13 - a03*a12;
+    float b06 = a20*a31 - a21*a30;
+    float b07 = a20*a32 - a22*a30;
+    float b08 = a20*a33 - a23*a30;
+    float b09 = a21*a32 - a22*a31;
+    float b10 = a21*a33 - a23*a31;
+    float b11 = a22*a33 - a23*a32;
+
+    // Calculate the invert determinant (inlined to avoid double-caching)
+    float invDet = 1.0f/(b00*b11 - b01*b10 + b02*b09 + b03*b08 - b04*b07 + b05*b06);
+
+    Matrix matViewProjInv = {
+        (a11*b11 - a12*b10 + a13*b09)*invDet,
+        (-a01*b11 + a02*b10 - a03*b09)*invDet,
+        (a31*b05 - a32*b04 + a33*b03)*invDet,
+        (-a21*b05 + a22*b04 - a23*b03)*invDet,
+        (-a10*b11 + a12*b08 - a13*b07)*invDet,
+        (a00*b11 - a02*b08 + a03*b07)*invDet,
+        (-a30*b05 + a32*b02 - a33*b01)*invDet,
+        (a20*b05 - a22*b02 + a23*b01)*invDet,
+        (a10*b10 - a11*b08 + a13*b06)*invDet,
+        (-a00*b10 + a01*b08 - a03*b06)*invDet,
+        (a30*b04 - a31*b02 + a33*b00)*invDet,
+        (-a20*b04 + a21*b02 - a23*b00)*invDet,
+        (-a10*b09 + a11*b07 - a12*b06)*invDet,
+        (a00*b09 - a01*b07 + a02*b06)*invDet,
+        (-a30*b03 + a31*b01 - a32*b00)*invDet,
+        (a20*b03 - a21*b01 + a22*b00)*invDet };
+
+    // Create quaternion from source point
+    Quaternion quat = { source.x, source.y, source.z, 1.0f };
+
+    // Multiply quat point by unproject matrix
+    Quaternion qtransformed = {     // QuaternionTransform(quat, matViewProjInv)
+        matViewProjInv.m0*quat.x + matViewProjInv.m4*quat.y + matViewProjInv.m8*quat.z + matViewProjInv.m12*quat.w,
+        matViewProjInv.m1*quat.x + matViewProjInv.m5*quat.y + matViewProjInv.m9*quat.z + matViewProjInv.m13*quat.w,
+        matViewProjInv.m2*quat.x + matViewProjInv.m6*quat.y + matViewProjInv.m10*quat.z + matViewProjInv.m14*quat.w,
+        matViewProjInv.m3*quat.x + matViewProjInv.m7*quat.y + matViewProjInv.m11*quat.z + matViewProjInv.m15*quat.w };
+
+    // Normalized world points in vectors
+    result.x = qtransformed.x/qtransformed.w;
+    result.y = qtransformed.y/qtransformed.w;
+    result.z = qtransformed.z/qtransformed.w;
+
+    return result;
+}
+
+// Get Vector3 as float array
 static float3 Vector3ToFloatV(Vector3 v)
 {
     float3 buffer = { 0 };
@@ -555,26 +749,29 @@ static float3 Vector3ToFloatV(Vector3 v)
 // Compute matrix determinant
 static float MatrixDeterminant(Matrix mat)
 {
+    float result = 0.0f;
+
     // Cache the matrix values (speed optimization)
     float a00 = mat.m0, a01 = mat.m1, a02 = mat.m2, a03 = mat.m3;
     float a10 = mat.m4, a11 = mat.m5, a12 = mat.m6, a13 = mat.m7;
     float a20 = mat.m8, a21 = mat.m9, a22 = mat.m10, a23 = mat.m11;
     float a30 = mat.m12, a31 = mat.m13, a32 = mat.m14, a33 = mat.m15;
 
-    float result = a30*a21*a12*a03 - a20*a31*a12*a03 - a30*a11*a22*a03 + a10*a31*a22*a03 +
-                   a20*a11*a32*a03 - a10*a21*a32*a03 - a30*a21*a02*a13 + a20*a31*a02*a13 +
-                   a30*a01*a22*a13 - a00*a31*a22*a13 - a20*a01*a32*a13 + a00*a21*a32*a13 +
-                   a30*a11*a02*a23 - a10*a31*a02*a23 - a30*a01*a12*a23 + a00*a31*a12*a23 +
-                   a10*a01*a32*a23 - a00*a11*a32*a23 - a20*a11*a02*a33 + a10*a21*a02*a33 +
-                   a20*a01*a12*a33 - a00*a21*a12*a33 - a10*a01*a22*a33 + a00*a11*a22*a33;
+    result = a30*a21*a12*a03 - a20*a31*a12*a03 - a30*a11*a22*a03 + a10*a31*a22*a03 +
+             a20*a11*a32*a03 - a10*a21*a32*a03 - a30*a21*a02*a13 + a20*a31*a02*a13 +
+             a30*a01*a22*a13 - a00*a31*a22*a13 - a20*a01*a32*a13 + a00*a21*a32*a13 +
+             a30*a11*a02*a23 - a10*a31*a02*a23 - a30*a01*a12*a23 + a00*a31*a12*a23 +
+             a10*a01*a32*a23 - a00*a11*a32*a23 - a20*a11*a02*a33 + a10*a21*a02*a33 +
+             a20*a01*a12*a33 - a00*a21*a12*a33 - a10*a01*a22*a33 + a00*a11*a22*a33;
 
     return result;
 }
 
-// Returns the trace of the matrix (sum of the values along the diagonal)
+// Get the trace of the matrix (sum of the values along the diagonal)
 static float MatrixTrace(Matrix mat)
 {
     float result = (mat.m0 + mat.m5 + mat.m10 + mat.m15);
+
     return result;
 }
 
@@ -655,7 +852,19 @@ static Matrix MatrixNormalize(Matrix mat)
 {
     Matrix result = { 0 };
 
-    float det = MatrixDeterminant(mat);
+    // Cache the matrix values (speed optimization)
+    float a00 = mat.m0, a01 = mat.m1, a02 = mat.m2, a03 = mat.m3;
+    float a10 = mat.m4, a11 = mat.m5, a12 = mat.m6, a13 = mat.m7;
+    float a20 = mat.m8, a21 = mat.m9, a22 = mat.m10, a23 = mat.m11;
+    float a30 = mat.m12, a31 = mat.m13, a32 = mat.m14, a33 = mat.m15;
+
+    // MatrixDeterminant(mat)
+    float det = a30*a21*a12*a03 - a20*a31*a12*a03 - a30*a11*a22*a03 + a10*a31*a22*a03 +
+                a20*a11*a32*a03 - a10*a21*a32*a03 - a30*a21*a02*a13 + a20*a31*a02*a13 +
+                a30*a01*a22*a13 - a00*a31*a22*a13 - a20*a01*a32*a13 + a00*a21*a32*a13 +
+                a30*a11*a02*a23 - a10*a31*a02*a23 - a30*a01*a12*a23 + a00*a31*a12*a23 +
+                a10*a01*a32*a23 - a00*a11*a32*a23 - a20*a11*a02*a33 + a10*a21*a02*a33 +
+                a20*a01*a12*a33 - a00*a21*a12*a33 - a10*a01*a22*a33 + a00*a11*a22*a33;
 
     result.m0 = mat.m0/det;
     result.m1 = mat.m1/det;
@@ -677,7 +886,7 @@ static Matrix MatrixNormalize(Matrix mat)
     return result;
 }
 
-// Returns identity matrix
+// Get identity matrix
 static Matrix MatrixIdentity()
 {
     Matrix result = { 1.0f, 0.0f, 0.0f, 0.0f,
@@ -691,7 +900,7 @@ static Matrix MatrixIdentity()
 // Add two matrices
 static Matrix MatrixAdd(Matrix left, Matrix right)
 {
-    Matrix result = MatrixIdentity();
+    Matrix result = { 0 };
 
     result.m0 = left.m0 + right.m0;
     result.m1 = left.m1 + right.m1;
@@ -716,7 +925,7 @@ static Matrix MatrixAdd(Matrix left, Matrix right)
 // Subtract two matrices (left - right)
 static Matrix MatrixSubtract(Matrix left, Matrix right)
 {
-    Matrix result = MatrixIdentity();
+    Matrix result = { 0 };
 
     result.m0 = left.m0 - right.m0;
     result.m1 = left.m1 - right.m1;
@@ -738,149 +947,7 @@ static Matrix MatrixSubtract(Matrix left, Matrix right)
     return result;
 }
 
-// Returns translation matrix
-static Matrix MatrixTranslate(float x, float y, float z)
-{
-    Matrix result = { 1.0f, 0.0f, 0.0f, x,
-                      0.0f, 1.0f, 0.0f, y,
-                      0.0f, 0.0f, 1.0f, z,
-                      0.0f, 0.0f, 0.0f, 1.0f };
-
-    return result;
-}
-
-// Create rotation matrix from axis and angle
-// NOTE: Angle should be provided in radians
-static Matrix MatrixRotate(Vector3 axis, float angle)
-{
-    Matrix result = { 0 };
-
-    float x = axis.x, y = axis.y, z = axis.z;
-
-    float length = sqrtf(x*x + y*y + z*z);
-
-    if ((length != 1.0f) && (length != 0.0f))
-    {
-        length = 1.0f/length;
-        x *= length;
-        y *= length;
-        z *= length;
-    }
-
-    float sinres = sinf(angle);
-    float cosres = cosf(angle);
-    float t = 1.0f - cosres;
-
-    result.m0  = x*x*t + cosres;
-    result.m1  = y*x*t + z*sinres;
-    result.m2  = z*x*t - y*sinres;
-    result.m3  = 0.0f;
-
-    result.m4  = x*y*t - z*sinres;
-    result.m5  = y*y*t + cosres;
-    result.m6  = z*y*t + x*sinres;
-    result.m7  = 0.0f;
-
-    result.m8  = x*z*t + y*sinres;
-    result.m9  = y*z*t - x*sinres;
-    result.m10 = z*z*t + cosres;
-    result.m11 = 0.0f;
-
-    result.m12 = 0.0f;
-    result.m13 = 0.0f;
-    result.m14 = 0.0f;
-    result.m15 = 1.0f;
-
-    return result;
-}
-
-// Returns xyz-rotation matrix (angles in radians)
-static Matrix MatrixRotateXYZ(Vector3 ang)
-{
-    Matrix result = MatrixIdentity();
-
-    float cosz = cosf(-ang.z);
-    float sinz = sinf(-ang.z);
-    float cosy = cosf(-ang.y);
-    float siny = sinf(-ang.y);
-    float cosx = cosf(-ang.x);
-    float sinx = sinf(-ang.x);
-
-    result.m0 = cosz * cosy;
-    result.m4 = (cosz * siny * sinx) - (sinz * cosx);
-    result.m8 = (cosz * siny * cosx) + (sinz * sinx);
-
-    result.m1 = sinz * cosy;
-    result.m5 = (sinz * siny * sinx) + (cosz * cosx);
-    result.m9 = (sinz * siny * cosx) - (cosz * sinx);
-
-    result.m2 = -siny;
-    result.m6 = cosy * sinx;
-    result.m10= cosy * cosx;
-
-    return result;
-}
-
-// Returns x-rotation matrix (angle in radians)
-static Matrix MatrixRotateX(float angle)
-{
-    Matrix result = MatrixIdentity();
-
-    float cosres = cosf(angle);
-    float sinres = sinf(angle);
-
-    result.m5 = cosres;
-    result.m6 = -sinres;
-    result.m9 = sinres;
-    result.m10 = cosres;
-
-    return result;
-}
-
-// Returns y-rotation matrix (angle in radians)
-static Matrix MatrixRotateY(float angle)
-{
-    Matrix result = MatrixIdentity();
-
-    float cosres = cosf(angle);
-    float sinres = sinf(angle);
-
-    result.m0 = cosres;
-    result.m2 = sinres;
-    result.m8 = -sinres;
-    result.m10 = cosres;
-
-    return result;
-}
-
-// Returns z-rotation matrix (angle in radians)
-static Matrix MatrixRotateZ(float angle)
-{
-    Matrix result = MatrixIdentity();
-
-    float cosres = cosf(angle);
-    float sinres = sinf(angle);
-
-    result.m0 = cosres;
-    result.m1 = -sinres;
-    result.m4 = sinres;
-    result.m5 = cosres;
-
-    return result;
-}
-
-// Returns scaling matrix
-static Matrix MatrixScale(float x, float y, float z)
-{
-    Matrix result = { x, 0.0f, 0.0f, 0.0f,
-                      0.0f, y, 0.0f, 0.0f,
-                      0.0f, 0.0f, z, 0.0f,
-                      0.0f, 0.0f, 0.0f, 1.0f };
-
-    return result;
-}
-
-// Returns two matrix multiplication
+// Get two matrix multiplication
 // NOTE: When multiplying matrices... the order matters!
 static Matrix MatrixMultiply(Matrix left, Matrix right)
 {
@@ -906,7 +973,197 @@ static Matrix MatrixMultiply(Matrix left, Matrix right)
     return result;
 }
 
-// Returns perspective projection matrix
+// Get translation matrix
+static Matrix MatrixTranslate(float x, float y, float z)
+{
+    Matrix result = { 1.0f, 0.0f, 0.0f, x,
+                      0.0f, 1.0f, 0.0f, y,
+                      0.0f, 0.0f, 1.0f, z,
+                      0.0f, 0.0f, 0.0f, 1.0f };
+
+    return result;
+}
+
+// Create rotation matrix from axis and angle
+// NOTE: Angle should be provided in radians
+static Matrix MatrixRotate(Vector3 axis, float angle)
+{
+    Matrix result = { 0 };
+
+    float x = axis.x, y = axis.y, z = axis.z;
+
+    float lengthSquared = x*x + y*y + z*z;
+
+    if ((lengthSquared != 1.0f) && (lengthSquared != 0.0f))
+    {
+        float ilength = 1.0f/sqrtf(lengthSquared);
+        x *= ilength;
+        y *= ilength;
+        z *= ilength;
+    }
+
+    float sinres = sinf(angle);
+    float cosres = cosf(angle);
+    float t = 1.0f - cosres;
+
+    result.m0 = x*x*t + cosres;
+    result.m1 = y*x*t + z*sinres;
+    result.m2 = z*x*t - y*sinres;
+    result.m3 = 0.0f;
+
+    result.m4 = x*y*t - z*sinres;
+    result.m5 = y*y*t + cosres;
+    result.m6 = z*y*t + x*sinres;
+    result.m7 = 0.0f;
+
+    result.m8 = x*z*t + y*sinres;
+    result.m9 = y*z*t - x*sinres;
+    result.m10 = z*z*t + cosres;
+    result.m11 = 0.0f;
+
+    result.m12 = 0.0f;
+    result.m13 = 0.0f;
+    result.m14 = 0.0f;
+    result.m15 = 1.0f;
+
+    return result;
+}
+
+// Get x-rotation matrix (angle in radians)
+static Matrix MatrixRotateX(float angle)
+{
+    Matrix result = { 1.0f, 0.0f, 0.0f, 0.0f,
+                      0.0f, 1.0f, 0.0f, 0.0f,
+                      0.0f, 0.0f, 1.0f, 0.0f,
+                      0.0f, 0.0f, 0.0f, 1.0f }; // MatrixIdentity()
+
+    float cosres = cosf(angle);
+    float sinres = sinf(angle);
+
+    result.m5 = cosres;
+    result.m6 = -sinres;
+    result.m9 = sinres;
+    result.m10 = cosres;
+
+    return result;
+}
+
+// Get y-rotation matrix (angle in radians)
+static Matrix MatrixRotateY(float angle)
+{
+    Matrix result = { 1.0f, 0.0f, 0.0f, 0.0f,
+                      0.0f, 1.0f, 0.0f, 0.0f,
+                      0.0f, 0.0f, 1.0f, 0.0f,
+                      0.0f, 0.0f, 0.0f, 1.0f }; // MatrixIdentity()
+
+    float cosres = cosf(angle);
+    float sinres = sinf(angle);
+
+    result.m0 = cosres;
+    result.m2 = sinres;
+    result.m8 = -sinres;
+    result.m10 = cosres;
+
+    return result;
+}
+
+// Get z-rotation matrix (angle in radians)
+static Matrix MatrixRotateZ(float angle)
+{
+    Matrix result = { 1.0f, 0.0f, 0.0f, 0.0f,
+                      0.0f, 1.0f, 0.0f, 0.0f,
+                      0.0f, 0.0f, 1.0f, 0.0f,
+                      0.0f, 0.0f, 0.0f, 1.0f }; // MatrixIdentity()
+
+    float cosres = cosf(angle);
+    float sinres = sinf(angle);
+
+    result.m0 = cosres;
+    result.m1 = -sinres;
+    result.m4 = sinres;
+    result.m5 = cosres;
+
+    return result;
+}
+
+
+// Get xyz-rotation matrix (angles in radians)
+static Matrix MatrixRotateXYZ(Vector3 ang)
+{
+    Matrix result = { 1.0f, 0.0f, 0.0f, 0.0f,
+                      0.0f, 1.0f, 0.0f, 0.0f,
+                      0.0f, 0.0f, 1.0f, 0.0f,
+                      0.0f, 0.0f, 0.0f, 1.0f }; // MatrixIdentity()
+
+    float cosz = cosf(-ang.z);
+    float sinz = sinf(-ang.z);
+    float cosy = cosf(-ang.y);
+    float siny = sinf(-ang.y);
+    float cosx = cosf(-ang.x);
+    float sinx = sinf(-ang.x);
+
+    result.m0 = cosz*cosy;
+    result.m4 = (cosz*siny*sinx) - (sinz*cosx);
+    result.m8 = (cosz*siny*cosx) + (sinz*sinx);
+
+    result.m1 = sinz*cosy;
+    result.m5 = (sinz*siny*sinx) + (cosz*cosx);
+    result.m9 = (sinz*siny*cosx) - (cosz*sinx);
+
+    result.m2 = -siny;
+    result.m6 = cosy*sinx;
+    result.m10= cosy*cosx;
+
+    return result;
+}
+
+// Get zyx-rotation matrix (angles in radians)
+static Matrix MatrixRotateZYX(Vector3 ang)
+{
+    Matrix result = { 0 };
+
+    float cz = cosf(ang.z);
+    float sz = sinf(ang.z);
+    float cy = cosf(ang.y);
+    float sy = sinf(ang.y);
+    float cx = cosf(ang.x);
+    float sx = sinf(ang.x);
+
+    result.m0 = cz*cy;
+    result.m1 = cz*sy*sx - cx*sz;
+    result.m2 = sz*sx + cz*cx*sy;
+    result.m3 = 0;
+
+    result.m4 = cy*sz;
+    result.m5 = cz*cx + sz*sy*sx;
+    result.m6 = cx*sz*sy - cz*sx;
+    result.m7 = 0;
+
+    result.m8 = -sy;
+    result.m9 = cy*sx;
+    result.m10 = cy*cx;
+    result.m11 = 0;
+
+    result.m12 = 0;
+    result.m13 = 0;
+    result.m14 = 0;
+    result.m15 = 1;
+
+    return result;
+}
+
+// Get scaling matrix
+static Matrix MatrixScale(float x, float y, float z)
+{
+    Matrix result = { x, 0.0f, 0.0f, 0.0f,
+                      0.0f, y, 0.0f, 0.0f,
+                      0.0f, 0.0f, z, 0.0f,
+                      0.0f, 0.0f, 0.0f, 1.0f };
+
+    return result;
+}
+
+// Get perspective projection matrix
 static Matrix MatrixFrustum(double left, double right, double bottom, double top, double near, double far)
 {
     Matrix result = { 0 };
@@ -915,13 +1172,13 @@ static Matrix MatrixFrustum(double left, double right, double bottom, double top
     float tb = cast(float)(top - bottom);
     float fn = cast(float)(far - near);
 
-    result.m0 = (cast(float) near*2.0f)/rl;
+    result.m0 = (cast(float)near*2.0f)/rl;
     result.m1 = 0.0f;
     result.m2 = 0.0f;
     result.m3 = 0.0f;
 
     result.m4 = 0.0f;
-    result.m5 = (cast(float) near*2.0f)/tb;
+    result.m5 = (cast(float)near*2.0f)/tb;
     result.m6 = 0.0f;
     result.m7 = 0.0f;
 
@@ -938,18 +1195,34 @@ static Matrix MatrixFrustum(double left, double right, double bottom, double top
     return result;
 }
 
-// Returns perspective projection matrix
+// Get perspective projection matrix
 // NOTE: Angle should be provided in radians
 static Matrix MatrixPerspective(double fovy, double aspect, double near, double far)
 {
+    Matrix result = { 0 };
+
     double top = near*tan(fovy*0.5);
+    double bottom = -top;
     double right = top*aspect;
-    Matrix result = MatrixFrustum(-right, right, -top, top, near, far);
+    double left = -right;
+
+    // MatrixFrustum(-right, right, -top, top, near, far);
+    float rl = cast(float)(right - left);
+    float tb = cast(float)(top - bottom);
+    float fn = cast(float)(far - near);
+
+    result.m0 = (cast(float)near*2.0f)/rl;
+    result.m5 = (cast(float)near*2.0f)/tb;
+    result.m8 = (cast(float)right + cast(float)left)/rl;
+    result.m9 = (cast(float)top + cast(float)bottom)/tb;
+    result.m10 = -(cast(float)far + cast(float)near)/fn;
+    result.m11 = -1.0f;
+    result.m14 = -(cast(float)far*cast(float)near*2.0f)/fn;
 
     return result;
 }
 
-// Returns orthographic projection matrix
+// Get orthographic projection matrix
 static Matrix MatrixOrtho(double left, double right, double bottom, double top, double near, double far)
 {
     Matrix result = { 0 };
@@ -978,63 +1251,84 @@ static Matrix MatrixOrtho(double left, double right, double bottom, double top, 
     return result;
 }
 
-// Returns camera look-at matrix (view matrix)
+// Get camera look-at matrix (view matrix)
 static Matrix MatrixLookAt(Vector3 eye, Vector3 target, Vector3 up)
 {
     Matrix result = { 0 };
 
-    Vector3 z = Vector3Subtract(eye, target);
-    z = Vector3Normalize(z);
-    Vector3 x = Vector3CrossProduct(up, z);
-    x = Vector3Normalize(x);
-    Vector3 y = Vector3CrossProduct(z, x);
-    y = Vector3Normalize(y);
+    float length = 0.0f;
+    float ilength = 0.0f;
 
-    result.m0 = x.x;
-    result.m1 = x.y;
-    result.m2 = x.z;
+    // Vector3Subtract(eye, target)
+    Vector3 vz = { eye.x - target.x, eye.y - target.y, eye.z - target.z };
+
+    // Vector3Normalize(vz)
+    Vector3 v = vz;
+    length = sqrtf(v.x*v.x + v.y*v.y + v.z*v.z);
+    if (length == 0.0f) length = 1.0f;
+    ilength = 1.0f/length;
+    vz.x *= ilength;
+    vz.y *= ilength;
+    vz.z *= ilength;
+
+    // Vector3CrossProduct(up, vz)
+    Vector3 vx = { up.y*vz.z - up.z*vz.y, up.z*vz.x - up.x*vz.z, up.x*vz.y - up.y*vz.x };
+
+    // Vector3Normalize(x)
+    v = vx;
+    length = sqrtf(v.x*v.x + v.y*v.y + v.z*v.z);
+    if (length == 0.0f) length = 1.0f;
+    ilength = 1.0f/length;
+    vx.x *= ilength;
+    vx.y *= ilength;
+    vx.z *= ilength;
+
+    // Vector3CrossProduct(vz, vx)
+    Vector3 vy = { vz.y*vx.z - vz.z*vx.y, vz.z*vx.x - vz.x*vx.z, vz.x*vx.y - vz.y*vx.x };
+
+    result.m0 = vx.x;
+    result.m1 = vy.x;
+    result.m2 = vz.x;
     result.m3 = 0.0f;
-    result.m4 = y.x;
-    result.m5 = y.y;
-    result.m6 = y.z;
+    result.m4 = vx.y;
+    result.m5 = vy.y;
+    result.m6 = vz.y;
     result.m7 = 0.0f;
-    result.m8 = z.x;
-    result.m9 = z.y;
-    result.m10 = z.z;
+    result.m8 = vx.z;
+    result.m9 = vy.z;
+    result.m10 = vz.z;
     result.m11 = 0.0f;
-    result.m12 = eye.x;
-    result.m13 = eye.y;
-    result.m14 = eye.z;
+    result.m12 = -(vx.x*eye.x + vx.y*eye.y + vx.z*eye.z);   // Vector3DotProduct(vx, eye)
+    result.m13 = -(vy.x*eye.x + vy.y*eye.y + vy.z*eye.z);   // Vector3DotProduct(vy, eye)
+    result.m14 = -(vz.x*eye.x + vz.y*eye.y + vz.z*eye.z);   // Vector3DotProduct(vz, eye)
     result.m15 = 1.0f;
-
-    result = MatrixInvert(result);
 
     return result;
 }
 
-// Returns float array of matrix data
+// Get float array of matrix data
 static float16 MatrixToFloatV(Matrix mat)
 {
-    float16 buffer = { 0 };
+    float16 result = { 0 };
 
-    buffer.v[0] = mat.m0;
-    buffer.v[1] = mat.m1;
-    buffer.v[2] = mat.m2;
-    buffer.v[3] = mat.m3;
-    buffer.v[4] = mat.m4;
-    buffer.v[5] = mat.m5;
-    buffer.v[6] = mat.m6;
-    buffer.v[7] = mat.m7;
-    buffer.v[8] = mat.m8;
-    buffer.v[9] = mat.m9;
-    buffer.v[10] = mat.m10;
-    buffer.v[11] = mat.m11;
-    buffer.v[12] = mat.m12;
-    buffer.v[13] = mat.m13;
-    buffer.v[14] = mat.m14;
-    buffer.v[15] = mat.m15;
+    result.v[0] = mat.m0;
+    result.v[1] = mat.m1;
+    result.v[2] = mat.m2;
+    result.v[3] = mat.m3;
+    result.v[4] = mat.m4;
+    result.v[5] = mat.m5;
+    result.v[6] = mat.m6;
+    result.v[7] = mat.m7;
+    result.v[8] = mat.m8;
+    result.v[9] = mat.m9;
+    result.v[10] = mat.m10;
+    result.v[11] = mat.m11;
+    result.v[12] = mat.m12;
+    result.v[13] = mat.m13;
+    result.v[14] = mat.m14;
+    result.v[15] = mat.m15;
 
-    return buffer;
+    return result;
 }
 
 //----------------------------------------------------------------------------------
@@ -1045,6 +1339,7 @@ static float16 MatrixToFloatV(Matrix mat)
 static Quaternion QuaternionAdd(Quaternion q1, Quaternion q2)
 {
     Quaternion result = {q1.x + q2.x, q1.y + q2.y, q1.z + q2.z, q1.w + q2.w};
+
     return result;
 }
 
@@ -1052,6 +1347,7 @@ static Quaternion QuaternionAdd(Quaternion q1, Quaternion q2)
 static Quaternion QuaternionAddValue(Quaternion q, float add)
 {
     Quaternion result = {q.x + add, q.y + add, q.z + add, q.w + add};
+
     return result;
 }
 
@@ -1059,6 +1355,7 @@ static Quaternion QuaternionAddValue(Quaternion q, float add)
 static Quaternion QuaternionSubtract(Quaternion q1, Quaternion q2)
 {
     Quaternion result = {q1.x - q2.x, q1.y - q2.y, q1.z - q2.z, q1.w - q2.w};
+
     return result;
 }
 
@@ -1066,20 +1363,23 @@ static Quaternion QuaternionSubtract(Quaternion q1, Quaternion q2)
 static Quaternion QuaternionSubtractValue(Quaternion q, float sub)
 {
     Quaternion result = {q.x - sub, q.y - sub, q.z - sub, q.w - sub};
+
     return result;
 }
 
-// Returns identity quaternion
+// Get identity quaternion
 static Quaternion QuaternionIdentity()
 {
     Quaternion result = { 0.0f, 0.0f, 0.0f, 1.0f };
+
     return result;
 }
 
 // Computes the length of a quaternion
 static float QuaternionLength(Quaternion q)
 {
-    float result = cast(float)sqrt(q.x*q.x + q.y*q.y + q.z*q.z + q.w*q.w);
+    float result = sqrtf(q.x*q.x + q.y*q.y + q.z*q.z + q.w*q.w);
+
     return result;
 }
 
@@ -1088,10 +1388,9 @@ static Quaternion QuaternionNormalize(Quaternion q)
 {
     Quaternion result = { 0 };
 
-    float length, ilength;
-    length = QuaternionLength(q);
+    float length = sqrtf(q.x*q.x + q.y*q.y + q.z*q.z + q.w*q.w);
     if (length == 0.0f) length = 1.0f;
-    ilength = 1.0f/length;
+    float ilength = 1.0f/length;
 
     result.x = q.x*ilength;
     result.y = q.y*ilength;
@@ -1105,17 +1404,18 @@ static Quaternion QuaternionNormalize(Quaternion q)
 static Quaternion QuaternionInvert(Quaternion q)
 {
     Quaternion result = q;
-    float length = QuaternionLength(q);
+
+    float length = sqrtf(q.x*q.x + q.y*q.y + q.z*q.z + q.w*q.w);
     float lengthSq = length*length;
 
     if (lengthSq != 0.0)
     {
-        float i = 1.0f/lengthSq;
+        float invLength = 1.0f/lengthSq;
 
-        result.x *= -i;
-        result.y *= -i;
-        result.z *= -i;
-        result.w *= i;
+        result.x *= -invLength;
+        result.y *= -invLength;
+        result.z *= -invLength;
+        result.w *= invLength;
     }
 
     return result;
@@ -1144,10 +1444,10 @@ static Quaternion QuaternionScale(Quaternion q, float mul)
 
     float qax = q.x, qay = q.y, qaz = q.z, qaw = q.w;
 
-    result.x = qax * mul + qaw * mul + qay * mul - qaz * mul;
-    result.y = qay * mul + qaw * mul + qaz * mul - qax * mul;
-    result.z = qaz * mul + qaw * mul + qax * mul - qay * mul;
-    result.w = qaw * mul - qax * mul - qay * mul - qaz * mul;
+    result.x = qax*mul + qaw*mul + qay*mul - qaz*mul;
+    result.y = qay*mul + qaw*mul + qaz*mul - qax*mul;
+    result.z = qaz*mul + qaw*mul + qax*mul - qay*mul;
+    result.w = qaw*mul - qax*mul - qay*mul - qaz*mul;
 
     return result;
 }
@@ -1155,7 +1455,8 @@ static Quaternion QuaternionScale(Quaternion q, float mul)
 // Divide two quaternions
 static Quaternion QuaternionDivide(Quaternion q1, Quaternion q2)
 {
-    Quaternion result = {q1.x / q2.x, q1.y / q2.y, q1.z / q2.z, q1.w / q2.w};
+    Quaternion result = { q1.x/q2.x, q1.y/q2.y, q1.z/q2.z, q1.w/q2.w };
+
     return result;
 }
 
@@ -1175,8 +1476,24 @@ static Quaternion QuaternionLerp(Quaternion q1, Quaternion q2, float amount)
 // Calculate slerp-optimized interpolation between two quaternions
 static Quaternion QuaternionNlerp(Quaternion q1, Quaternion q2, float amount)
 {
-    Quaternion result = QuaternionLerp(q1, q2, amount);
-    result = QuaternionNormalize(result);
+    Quaternion result = { 0 };
+
+    // QuaternionLerp(q1, q2, amount)
+    result.x = q1.x + amount*(q2.x - q1.x);
+    result.y = q1.y + amount*(q2.y - q1.y);
+    result.z = q1.z + amount*(q2.z - q1.z);
+    result.w = q1.w + amount*(q2.w - q1.w);
+
+    // QuaternionNormalize(q);
+    Quaternion q = result;
+    float length = sqrtf(q.x*q.x + q.y*q.y + q.z*q.z + q.w*q.w);
+    if (length == 0.0f) length = 1.0f;
+    float ilength = 1.0f/length;
+
+    result.x = q.x*ilength;
+    result.y = q.y*ilength;
+    result.z = q.z*ilength;
+    result.w = q.w*ilength;
 
     return result;
 }
@@ -1186,7 +1503,13 @@ static Quaternion QuaternionSlerp(Quaternion q1, Quaternion q2, float amount)
 {
     Quaternion result = { 0 };
 
-    float cosHalfTheta =  q1.x*q2.x + q1.y*q2.y + q1.z*q2.z + q1.w*q2.w;
+    float cosHalfTheta = q1.x*q2.x + q1.y*q2.y + q1.z*q2.z + q1.w*q2.w;
+
+    if (cosHalfTheta < 0)
+    {
+        q2.x = -q2.x; q2.y = -q2.y; q2.z = -q2.z; q2.w = -q2.w;
+        cosHalfTheta = -cosHalfTheta;
+    }
 
     if (fabs(cosHalfTheta) >= 1.0f) result = q1;
     else if (cosHalfTheta > 0.95f) result = QuaternionNlerp(q1, q2, amount);
@@ -1222,154 +1545,157 @@ static Quaternion QuaternionFromVector3ToVector3(Vector3 from, Vector3 to)
 {
     Quaternion result = { 0 };
 
-    float cos2Theta = Vector3DotProduct(from, to);
-    Vector3 cross = Vector3CrossProduct(from, to);
+    float cos2Theta = (from.x*to.x + from.y*to.y + from.z*to.z);    // Vector3DotProduct(from, to)
+    Vector3 cross = { from.y*to.z - from.z*to.y, from.z*to.x - from.x*to.z, from.x*to.y - from.y*to.x }; // Vector3CrossProduct(from, to)
 
     result.x = cross.x;
     result.y = cross.y;
     result.z = cross.z;
-    result.w = 1.0f + cos2Theta;     // NOTE: Added QuaternioIdentity()
+    result.w = 1.0f + cos2Theta;
 
-    // Normalize to essentially nlerp the original and identity to 0.5
-    result = QuaternionNormalize(result);
+    // QuaternionNormalize(q);
+    // NOTE: Normalize to essentially nlerp the original and identity to 0.5
+    Quaternion q = result;
+    float length = sqrtf(q.x*q.x + q.y*q.y + q.z*q.z + q.w*q.w);
+    if (length == 0.0f) length = 1.0f;
+    float ilength = 1.0f/length;
 
-    // Above lines are equivalent to:
-    //Quaternion result = QuaternionNlerp(q, QuaternionIdentity(), 0.5f);
+    result.x = q.x*ilength;
+    result.y = q.y*ilength;
+    result.z = q.z*ilength;
+    result.w = q.w*ilength;
 
     return result;
 }
 
-// Returns a quaternion for a given rotation matrix
+// Get a quaternion for a given rotation matrix
 static Quaternion QuaternionFromMatrix(Matrix mat)
 {
     Quaternion result = { 0 };
 
-    float trace = MatrixTrace(mat);
-
-    if (trace > 0.0f)
+    if ((mat.m0 > mat.m5) && (mat.m0 > mat.m10))
     {
-        float s = sqrtf(trace + 1)*2.0f;
-        float invS = 1.0f/s;
+        float s = sqrtf(1.0f + mat.m0 - mat.m5 - mat.m10)*2;
 
-        result.w = s*0.25f;
-        result.x = (mat.m6 - mat.m9)*invS;
-        result.y = (mat.m8 - mat.m2)*invS;
-        result.z = (mat.m1 - mat.m4)*invS;
+        result.x = 0.25f*s;
+        result.y = (mat.m4 + mat.m1)/s;
+        result.z = (mat.m2 + mat.m8)/s;
+        result.w = (mat.m9 - mat.m6)/s;
+    }
+    else if (mat.m5 > mat.m10)
+    {
+        float s = sqrtf(1.0f + mat.m5 - mat.m0 - mat.m10)*2;
+        result.x = (mat.m4 + mat.m1)/s;
+        result.y = 0.25f*s;
+        result.z = (mat.m9 + mat.m6)/s;
+        result.w = (mat.m2 - mat.m8)/s;
     }
     else
     {
-        float m00 = mat.m0, m11 = mat.m5, m22 = mat.m10;
-
-        if (m00 > m11 && m00 > m22)
-        {
-            float s = cast(float)sqrt(1.0f + m00 - m11 - m22)*2.0f;
-            float invS = 1.0f/s;
-
-            result.w = (mat.m6 - mat.m9)*invS;
-            result.x = s*0.25f;
-            result.y = (mat.m4 + mat.m1)*invS;
-            result.z = (mat.m8 + mat.m2)*invS;
-        }
-        else if (m11 > m22)
-        {
-            float s = sqrtf(1.0f + m11 - m00 - m22)*2.0f;
-            float invS = 1.0f/s;
-
-            result.w = (mat.m8 - mat.m2)*invS;
-            result.x = (mat.m4 + mat.m1)*invS;
-            result.y = s*0.25f;
-            result.z = (mat.m9 + mat.m6)*invS;
-        }
-        else
-        {
-            float s = sqrtf(1.0f + m22 - m00 - m11)*2.0f;
-            float invS = 1.0f/s;
-
-            result.w = (mat.m1 - mat.m4)*invS;
-            result.x = (mat.m8 + mat.m2)*invS;
-            result.y = (mat.m9 + mat.m6)*invS;
-            result.z = s*0.25f;
-        }
+        float s = sqrtf(1.0f + mat.m10 - mat.m0 - mat.m5)*2;
+        result.x = (mat.m2 + mat.m8)/s;
+        result.y = (mat.m9 + mat.m6)/s;
+        result.z = 0.25f*s;
+        result.w = (mat.m4 - mat.m1)/s;
     }
 
     return result;
 }
 
-// Returns a matrix for a given quaternion
+// Get a matrix for a given quaternion
 static Matrix QuaternionToMatrix(Quaternion q)
 {
-    Matrix result = { 0 };
+    Matrix result = { 1.0f, 0.0f, 0.0f, 0.0f,
+                      0.0f, 1.0f, 0.0f, 0.0f,
+                      0.0f, 0.0f, 1.0f, 0.0f,
+                      0.0f, 0.0f, 0.0f, 1.0f }; // MatrixIdentity()
 
-    float x = q.x, y = q.y, z = q.z, w = q.w;
+    float a2 = q.x*q.x;
+    float b2 = q.y*q.y;
+    float c2 = q.z*q.z;
+    float ac = q.x*q.z;
+    float ab = q.x*q.y;
+    float bc = q.y*q.z;
+    float ad = q.w*q.x;
+    float bd = q.w*q.y;
+    float cd = q.w*q.z;
 
-    float x2 = x + x;
-    float y2 = y + y;
-    float z2 = z + z;
+    result.m0 = 1 - 2*(b2 + c2);
+    result.m1 = 2*(ab + cd);
+    result.m2 = 2*(ac - bd);
 
-    float length = QuaternionLength(q);
-    float lengthSquared = length*length;
+    result.m4 = 2*(ab - cd);
+    result.m5 = 1 - 2*(a2 + c2);
+    result.m6 = 2*(bc + ad);
 
-    float xx = x*x2/lengthSquared;
-    float xy = x*y2/lengthSquared;
-    float xz = x*z2/lengthSquared;
-
-    float yy = y*y2/lengthSquared;
-    float yz = y*z2/lengthSquared;
-    float zz = z*z2/lengthSquared;
-
-    float wx = w*x2/lengthSquared;
-    float wy = w*y2/lengthSquared;
-    float wz = w*z2/lengthSquared;
-
-    result.m0 = 1.0f - (yy + zz);
-    result.m1 = xy - wz;
-    result.m2 = xz + wy;
-    result.m3 = 0.0f;
-    result.m4 = xy + wz;
-    result.m5 = 1.0f - (xx + zz);
-    result.m6 = yz - wx;
-    result.m7 = 0.0f;
-    result.m8 = xz - wy;
-    result.m9 = yz + wx;
-    result.m10 = 1.0f - (xx + yy);
-    result.m11 = 0.0f;
-    result.m12 = 0.0f;
-    result.m13 = 0.0f;
-    result.m14 = 0.0f;
-    result.m15 = 1.0f;
+    result.m8 = 2*(ac + bd);
+    result.m9 = 2*(bc - ad);
+    result.m10 = 1 - 2*(a2 + b2);
 
     return result;
 }
 
-// Returns rotation quaternion for an angle and axis
+// Get rotation quaternion for an angle and axis
 // NOTE: angle must be provided in radians
 static Quaternion QuaternionFromAxisAngle(Vector3 axis, float angle)
 {
     Quaternion result = { 0.0f, 0.0f, 0.0f, 1.0f };
 
-    if (Vector3Length(axis) != 0.0f)
+    float axisLength = sqrtf(axis.x*axis.x + axis.y*axis.y + axis.z*axis.z);
 
-    angle *= 0.5f;
+    if (axisLength != 0.0f)
+    {
+        angle *= 0.5f;
 
-    axis = Vector3Normalize(axis);
+        float length = 0.0f;
+        float ilength = 0.0f;
 
-    float sinres = sinf(angle);
-    float cosres = cosf(angle);
+        // Vector3Normalize(axis)
+        Vector3 v = axis;
+        length = sqrtf(v.x*v.x + v.y*v.y + v.z*v.z);
+        if (length == 0.0f) length = 1.0f;
+        ilength = 1.0f/length;
+        axis.x *= ilength;
+        axis.y *= ilength;
+        axis.z *= ilength;
 
-    result.x = axis.x*sinres;
-    result.y = axis.y*sinres;
-    result.z = axis.z*sinres;
-    result.w = cosres;
+        float sinres = sinf(angle);
+        float cosres = cosf(angle);
 
-    result = QuaternionNormalize(result);
+        result.x = axis.x*sinres;
+        result.y = axis.y*sinres;
+        result.z = axis.z*sinres;
+        result.w = cosres;
+
+        // QuaternionNormalize(q);
+        Quaternion q = result;
+        length = sqrtf(q.x*q.x + q.y*q.y + q.z*q.z + q.w*q.w);
+        if (length == 0.0f) length = 1.0f;
+        ilength = 1.0f/length;
+        result.x = q.x*ilength;
+        result.y = q.y*ilength;
+        result.z = q.z*ilength;
+        result.w = q.w*ilength;
+    }
 
     return result;
 }
 
-// Returns the rotation angle and axis for a given quaternion
+// Get the rotation angle and axis for a given quaternion
 static void QuaternionToAxisAngle(Quaternion q, Vector3 *outAxis, float *outAngle)
 {
-    if (fabs(q.w) > 1.0f) q = QuaternionNormalize(q);
+    if (fabs(q.w) > 1.0f)
+    {
+        // QuaternionNormalize(q);
+        float length = sqrtf(q.x*q.x + q.y*q.y + q.z*q.z + q.w*q.w);
+        if (length == 0.0f) length = 1.0f;
+        float ilength = 1.0f/length;
+
+        q.x = q.x*ilength;
+        q.y = q.y*ilength;
+        q.z = q.z*ilength;
+        q.w = q.w*ilength;
+    }
 
     Vector3 resAxis = { 0.0f, 0.0f, 0.0f };
     float resAngle = 2.0f*acosf(q.w);
@@ -1392,47 +1718,48 @@ static void QuaternionToAxisAngle(Quaternion q, Vector3 *outAxis, float *outAngl
     *outAngle = resAngle;
 }
 
-// Returns he quaternion equivalent to Euler angles
-static Quaternion QuaternionFromEuler(float roll, float pitch, float yaw)
+// Get the quaternion equivalent to Euler angles
+// NOTE: Rotation order is ZYX
+static Quaternion QuaternionFromEuler(float pitch, float yaw, float roll)
 {
-    Quaternion q = { 0 };
+    Quaternion result = { 0 };
 
-    float x0 = cosf(roll*0.5f);
-    float x1 = sinf(roll*0.5f);
-    float y0 = cosf(pitch*0.5f);
-    float y1 = sinf(pitch*0.5f);
-    float z0 = cosf(yaw*0.5f);
-    float z1 = sinf(yaw*0.5f);
+    float x0 = cosf(pitch*0.5f);
+    float x1 = sinf(pitch*0.5f);
+    float y0 = cosf(yaw*0.5f);
+    float y1 = sinf(yaw*0.5f);
+    float z0 = cosf(roll*0.5f);
+    float z1 = sinf(roll*0.5f);
 
-    q.x = x1*y0*z0 - x0*y1*z1;
-    q.y = x0*y1*z0 + x1*y0*z1;
-    q.z = x0*y0*z1 - x1*y1*z0;
-    q.w = x0*y0*z0 + x1*y1*z1;
+    result.x = x1*y0*z0 - x0*y1*z1;
+    result.y = x0*y1*z0 + x1*y0*z1;
+    result.z = x0*y0*z1 - x1*y1*z0;
+    result.w = x0*y0*z0 + x1*y1*z1;
 
-    return q;
+    return result;
 }
 
-// Return the Euler angles equivalent to quaternion (roll, pitch, yaw)
-// NOTE: Angles are returned in a Vector3 struct in degrees
+// Get the Euler angles equivalent to quaternion (roll, pitch, yaw)
+// NOTE: Angles are returned in a Vector3 struct in radians
 static Vector3 QuaternionToEuler(Quaternion q)
 {
     Vector3 result = { 0 };
 
-    // roll (x-axis rotation)
+    // Roll (x-axis rotation)
     float x0 = 2.0f*(q.w*q.x + q.y*q.z);
     float x1 = 1.0f - 2.0f*(q.x*q.x + q.y*q.y);
-    result.x = atan2f(x0, x1)*RAD2DEG;
+    result.x = atan2f(x0, x1);
 
-    // pitch (y-axis rotation)
+    // Pitch (y-axis rotation)
     float y0 = 2.0f*(q.w*q.y - q.z*q.x);
     y0 = y0 > 1.0f ? 1.0f : y0;
     y0 = y0 < -1.0f ? -1.0f : y0;
-    result.y = asinf(y0)*RAD2DEG;
+    result.y = asinf(y0);
 
-    // yaw (z-axis rotation)
+    // Yaw (z-axis rotation)
     float z0 = 2.0f*(q.w*q.z + q.x*q.y);
     float z1 = 1.0f - 2.0f*(q.y*q.y + q.z*q.z);
-    result.z = atan2f(z0, z1)*RAD2DEG;
+    result.z = atan2f(z0, z1);
 
     return result;
 }
