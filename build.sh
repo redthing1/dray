@@ -1,0 +1,1 @@
+cd demo && dub build
