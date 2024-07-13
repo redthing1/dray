@@ -131,7 +131,7 @@ module raygui;
 
 import raylib;
 
-extern (C):
+extern (C) @nogc nothrow:
 
 enum RAYGUI_VERSION = "2.6-dev";
 
@@ -143,6 +143,8 @@ enum NUM_PROPS_DEFAULT = 16; // Number of standard properties
 enum NUM_PROPS_EXTENDED = 8; // Number of extended properties
 
 enum TEXTEDIT_CURSOR_BLINK_FRAMES = 20; // Text edit controls cursor blink timming
+
+// Prevents name mangling of functions
 
 //----------------------------------------------------------------------------------
 // Types and Structures Definition
@@ -450,8 +452,6 @@ const(char)* GuiIconText (int iconId, const(char)* text); // Get text with icon 
 // Clear icon pixel value
 // Check icon pixel value
 
-// RAYGUI_H
-
 /***********************************************************************************
 *
 *   RAYGUI IMPLEMENTATION
@@ -663,6 +663,10 @@ const(char)* GuiIconText (int iconId, const(char)* text); // Get text with icon 
 //--------------------------------------------------------------------
 
 // Check button state
+
+// Horizontal scroll (Shift + Mouse wheel)
+
+// Vertical scroll
 
 // Normalize scroll values
 
@@ -1505,3 +1509,7 @@ else if (IsKeyDown(KEY_DOWN))
 // RAYGUI_STANDALONE
 
 // RAYGUI_IMPLEMENTATION
+
+// Prevents name mangling of functions
+
+// RAYGUI_H
