@@ -2,9 +2,9 @@
 
 # dray
 
-dlang bindings to [raylib](https://github.com/xdrie/raylib) **v3.5.0** (based on the official upstream [3.5.0 release](https://github.com/raysan5/raylib/releases/tag/3.5.0)).
+dlang bindings to [raylib](https://github.com/redthing1/raylib) **v4.0.0** (based on the official upstream [4.0.0 release](https://github.com/raysan5/raylib/releases/tag/4.0.0)).
 
-some minor changes are included:
+patches:
 + `raygui` included
 + HIDPI enabled
 
@@ -15,6 +15,6 @@ if for some reason you want to use a custom build, just place your own `librayli
 
 note that `raylib` has some of its own dependencies such as OpenGL.
 
-## example
+## demo
 
-see [example](example/), which demonstrates a simple application using these Raylib bindings.
+see [demo](demo/), which demonstrates a simple application using these Raylib bindings.
