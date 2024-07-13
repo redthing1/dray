@@ -4,3 +4,6 @@ authors "redthing1"
 copyright "Copyright © 2020, redthing1"
 license "proprietary"
 dependency "dray" path=".."
+
+lflags "-lglew" "-lglfw" "-framework" "OpenGL" "-L/opt/homebrew/lib" platform="osx"
+lflags "WinMM.lib" "OLDNAMES.lib" "MSVCRT.lib" "$PACKAGE_DIR/raylib.lib" "$PACKAGE_DIR/*.lib $PACKAGE_DIR/glfw3_mt.lib" "user32.lib" "gdi32.lib" platform="windows"
