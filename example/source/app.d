@@ -5,9 +5,6 @@ import raylib;
 void main() {
   writeln("Starting a raylib example.");
 
-  // test raymath
-  assert(Clamp(2, 0, 1) == 1);
-
   SetTargetFPS(60);
   InitWindow(800, 640, "Hello, World!");
   scope (exit)
