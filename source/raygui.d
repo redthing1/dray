@@ -1,6 +1,8 @@
+module raygui;
+
 /*******************************************************************************************
 *
-*   raygui v2.7 - A simple and easy-to-use immediate-mode gui library
+*   raygui v2.8 - A simple and easy-to-use immediate-mode gui library
 *
 *   DESCRIPTION:
 *
@@ -69,6 +71,7 @@
 *
 *
 *   VERSIONS HISTORY:
+*       2.8 (03-May-2020) Centralized rectangles drawing to GuiDrawRectangle()
 *       2.7 (20-Feb-2020) Added possible tooltips API
 *       2.6 (09-Sep-2019) ADDED: GuiTextInputBox()
 *                         REDESIGNED: GuiListView*(), GuiDropdownBox(), GuiSlider*(), GuiProgressBar(), GuiMessageBox()
@@ -126,34 +129,9 @@
 *
 **********************************************************************************************/
 
-import core.stdc.stdlib;
-import raylib;
-
 extern (C):
 
 enum RAYGUI_VERSION = "2.6-dev";
-
-// Define functions scope to be used internally (static) or externally (extern) to the module including this file
-
-// Functions just visible to module including this file
-
-// Functions visible from other files (no name mangling of functions in C++)
-
-// NOTE: By default any function declared in a C file is extern // Functions visible from other files
-
-// We are building raygui as a Win32 shared library (.dll).
-
-// We are using raygui as a Win32 shared library (.dll)
-
-// Required for: malloc(), calloc(), free()
-
-// Allow custom memory allocators
-
-alias RAYGUI_MALLOC = malloc;
-
-alias RAYGUI_CALLOC = calloc;
-
-alias RAYGUI_FREE = free;
 
 //----------------------------------------------------------------------------------
 // Defines and Macros
@@ -482,6 +460,7 @@ const(char)* GuiIconText (int iconId, const(char)* text); // Get text with icon 
 
 // Required for: FILE, fopen(), fclose(), fprintf(), feof(), fscanf(), vsprintf()
 // Required for: strlen() on GuiTextBox()
+// Required for: roundf() on GuiColorPicker()
 
 // Required for: va_list, va_start(), vfprintf(), va_end()
 
@@ -503,7 +482,7 @@ const(char)* GuiIconText (int iconId, const(char)* text); // Get text with icon 
 // Gui lock state (no inputs processed)
 // Gui element transpacency on drawing
 
-// Global gui style array (allocated on heap by default)
+// Global gui style array (allocated on data segment by default)
 // NOTE: In raygui we manage a single int array with all the possible style properties.
 // When a new style is loaded, it loads over the global style... but default gui style
 // could always be recovered with GuiLoadStyleDefault()
@@ -529,6 +508,7 @@ const(char)* GuiIconText (int iconId, const(char)* text); // Get text with icon 
 
 // Drawing required functions
 //-------------------------------------------------------------------------------
+// -- GuiDrawRectangle(), GuiDrawIcon()
 
 // -- GuiColorPicker()
 // -- GuiDropdownBox(), GuiScrollBar()
@@ -558,8 +538,6 @@ const(char)* GuiIconText (int iconId, const(char)* text); // Get text with icon 
 // Split text into multiple strings
 // Get integer value from text
 
-// Draw rectangle filled with color
-// Draw rectangle outlines
 // Draw rectangle vertical gradient
 //-------------------------------------------------------------------------------
 
@@ -568,71 +546,21 @@ const(char)* GuiIconText (int iconId, const(char)* text); // Get text with icon 
 //----------------------------------------------------------------------------------
 // Module specific Functions Declaration
 //----------------------------------------------------------------------------------
-// Convert color data from HSV to RGB
-// Convert color data from RGB to HSV
-
 // Gui get text width using default font
-// TODO: GetTextSize()
-
-// TODO: Consider text icon width here???
-
 // Get text bounds considering control bounds
-
-// Consider TEXT_PADDING properly, depends on control type and TEXT_ALIGNMENT
-
-// NOTE: ValueBox text value always centered, text padding applies to label
-
-// TODO: Special cases (no label): COMBOBOX, DROPDOWNBOX, LISTVIEW (scrollbar?)
-// More special cases (label side): CHECKBOX, SLIDER, VALUEBOX, SPINNER
-
 // Get text icon if provided and move text cursor
-// NOTE: We support up to 999 values for iconId
-
-// Maybe we have an icon!
-
-// Maximum length for icon value: 3 digits + '\0'
-
-// Move text pointer after icon
-// WARNING: If only icon provided, it could point to EOL character!
 
 // Gui draw text using default font
-
-// Vertical alignment for pixel perfect
-
-// Check text for icon and move cursor
-
-// Get text position depending on alignment and iconId
-//---------------------------------------------------------------------------------
-
-// NOTE: We get text size after icon been processed
-
-// WARNING: If only icon provided, text could be pointing to eof character!
-
-// Check guiTextAlign global variables
-
-// NOTE: Make sure we get pixel-perfect coordinates,
-// In case of decimals we got weird text positioning
-
-//---------------------------------------------------------------------------------
-
-// Draw text (with icon if available)
-//---------------------------------------------------------------------------------
-
-// NOTE: We consider icon height, probably different than text size
-
-//---------------------------------------------------------------------------------
-
+// Gui draw rectangle using default raygui style
 // Draw tooltip relatively to bounds
 
-//static int tooltipFramesCounter = 0;  // Not possible gets reseted at second function call!
-
 // Split controls text into multiple strings
-// Also check for multiple columns (required by GuiToggleGroup())
+// Convert color data from HSV to RGB
+// Convert color data from RGB to HSV
 
 //----------------------------------------------------------------------------------
 // Gui Setup Functions Definition
 //----------------------------------------------------------------------------------
-
 // Enable gui global state
 
 // Disable gui global state
@@ -678,6 +606,8 @@ const(char)* GuiIconText (int iconId, const(char)* text); // Get text with icon 
 
 // NOTE: This define is also used by GuiMessageBox() and GuiTextInputBox()
 
+//GuiControlState state = guiState;
+
 // Update control
 //--------------------------------------------------------------------
 // NOTE: Logic is directly managed by button
@@ -685,10 +615,8 @@ const(char)* GuiIconText (int iconId, const(char)* text); // Get text with icon 
 
 // Draw control
 //--------------------------------------------------------------------
-
-// Draw window base
-
 // Draw window header as status bar
+// Draw window base
 
 // Draw window close button
 
@@ -756,9 +684,9 @@ const(char)* GuiIconText (int iconId, const(char)* text); // Get text with icon 
 
 // TODO: Consider scroll bars side
 
-// Set scrollbar slider size back to the way it was before
-
 // Draw scrollbar lines depending on current state
+
+// Set scrollbar slider size back to the way it was before
 
 //--------------------------------------------------------------------
 
@@ -914,6 +842,8 @@ const(char)* GuiIconText (int iconId, const(char)* text); // Get text with icon 
 // Update control
 //--------------------------------------------------------------------
 
+// Returns codepoint as Unicode
+
 // Only allow keys in range [32..125]
 
 // Delete text
@@ -966,7 +896,10 @@ const(char)* GuiIconText (int iconId, const(char)* text); // Get text with icon 
 // Draw control
 //--------------------------------------------------------------------
 
+// WARNING: BLANK color does not work properly with Fade()
+
 // Draw blinking cursor
+
 // NOTE: ValueBox internal text is always centered
 
 // Draw text label if provided
@@ -1116,8 +1049,8 @@ const(char)* GuiIconText (int iconId, const(char)* text); // Get text with icon 
 // Draw control
 //--------------------------------------------------------------------
 // Draw the background
-// Draw the scrollbar active area background
 
+// Draw the scrollbar active area background
 // Draw the slider bar
 
 // Draw arrows
@@ -1430,6 +1363,68 @@ else if (IsKeyDown(KEY_DOWN))
 //----------------------------------------------------------------------------------
 // Module specific Functions Definition
 //----------------------------------------------------------------------------------
+// Gui get text width using default font
+
+// TODO: Consider text icon width here???
+
+// Get text bounds considering control bounds
+
+// Consider TEXT_PADDING properly, depends on control type and TEXT_ALIGNMENT
+
+// NOTE: ValueBox text value always centered, text padding applies to label
+
+// TODO: Special cases (no label): COMBOBOX, DROPDOWNBOX, LISTVIEW (scrollbar?)
+// More special cases (label side): CHECKBOX, SLIDER, VALUEBOX, SPINNER
+
+// Get text icon if provided and move text cursor
+// NOTE: We support up to 999 values for iconId
+
+// Maybe we have an icon!
+
+// Maximum length for icon value: 3 digits + '\0'
+
+// Move text pointer after icon
+// WARNING: If only icon provided, it could point to EOL character!
+
+// Gui draw text using default font
+
+// Vertical alignment for pixel perfect
+
+// Check text for icon and move cursor
+
+// Get text position depending on alignment and iconId
+//---------------------------------------------------------------------------------
+
+// NOTE: We get text size after icon been processed
+
+// WARNING: If only icon provided, text could be pointing to eof character!
+
+// Check guiTextAlign global variables
+
+// NOTE: Make sure we get pixel-perfect coordinates,
+// In case of decimals we got weird text positioning
+
+//---------------------------------------------------------------------------------
+
+// Draw text (with icon if available)
+//---------------------------------------------------------------------------------
+
+// NOTE: We consider icon height, probably different than text size
+
+//---------------------------------------------------------------------------------
+
+// Gui draw rectangle using default raygui plain style with borders
+
+// Draw rectangle filled with color
+
+// Draw rectangle border lines with color
+
+// TODO: For n-patch-based style we would need: [state] and maybe [control]
+// In this case all controls drawing logic should be moved to this function... I don't like it...
+
+// Draw tooltip relatively to bounds
+
+//static int tooltipFramesCounter = 0;  // Not possible gets reseted at second function call!
 
 // Split controls text into multiple strings
 // Also check for multiple columns (required by GuiToggleGroup())
@@ -1482,10 +1477,6 @@ else if (IsKeyDown(KEY_DOWN))
 
 // Formatting of text with variables to 'embed'
 
-// Draw rectangle filled with color
-
-// Draw rectangle border lines with color
-
 // Draw rectangle with vertical gradient fill color
 // NOTE: This function is only used by GuiColorPicker()
 
@@ -1506,6 +1497,8 @@ else if (IsKeyDown(KEY_DOWN))
 
 // Get integer value from text
 // NOTE: This function replaces atoi() [stdlib.h]
+
+// Encode codepoint into utf8 text (char array length returned as parameter)
 
 // RAYGUI_STANDALONE
 
