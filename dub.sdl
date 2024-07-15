@@ -7,7 +7,6 @@ dependency "fluent-asserts" version="~>0.13.3"
 targetType "library"
 
 # on windows platforms, link to raylib static library
-lflags "-L$WINLIB_BASE" "-L$WINLIB_MINGW" platform="windows"
 sourceFiles "$PACKAGE_DIR/raylib.lib" "$PACKAGE_DIR/WinMM.lib" platform="windows"
 
 # on posix platforms, link to raylib static library
