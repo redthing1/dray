@@ -11,6 +11,7 @@ lflags "-lglew" "-lglfw" "-framework" "OpenGL" "-L/opt/homebrew/lib" "-L$PACKAGE
 lflags "-L$PACKAGE_DIR" "$PACKAGE_DIR/libraylib.a" platform="linux"
 
 preGenerateCommands "bash $PACKAGE_DIR/clib.sh prepare" platform="posix"
+preGenerateCommands "powershell -File $PACKAGE_DIR/clib.ps1 prepare" platform="windows"
 
 configuration "desktop-gl33" {
     
