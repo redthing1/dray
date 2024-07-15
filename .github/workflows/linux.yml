@@ -19,6 +19,19 @@ jobs:
         with:
           compiler: ${{ matrix.dc }}
       - run: cat dub.sdl
-      - run: dub build --arch=${{ matrix.arch }}
-        working-directory: demo
-      
+    - name: 'Build'
+      run: |
+        dub build
+    - name: 'Build Demo'
+      run: |
+        dub build
+      working-directory: demo
+    - name: 'Package'
+      run: |
+        dir
+        7z a dray_linux_builddir.7z .
+    - name: 'Upload Artifacts'
+      uses: actions/upload-artifact@v2
+      with:
+        name: dray-linux-builddir
+        path: dray_linux_builddir.7z

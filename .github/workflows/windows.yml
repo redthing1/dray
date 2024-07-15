@@ -36,7 +36,6 @@ jobs:
     - name: 'Build'
       run: |
         dub build
-    
     - name: 'Build Demo'
       run: |
         dub build
@@ -44,9 +43,9 @@ jobs:
     - name: 'Package'
       run: |
         dir
-        7z a dray_nuklear_win_builddir.7z .
+        7z a dray_win_builddir.7z .
     - name: 'Upload Artifacts'
       uses: actions/upload-artifact@v2
       with:
-        name: dray_nuklear-win-builddir
-        path: dray_nuklear_win_builddir.7z
+        name: dray-win-builddir
+        path: dray_win_builddir.7z
