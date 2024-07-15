@@ -6,24 +6,26 @@ license "apache-2.0"
 dependency "fluent-asserts" version="~>0.13.3"
 targetType "library"
 
+preGenerateCommands "bash $PACKAGE_DIR/clib.sh prepare" platform="posix"
+
 configuration "desktop-gl33" {
     lflags "-L$PACKAGE_DIR" "$PACKAGE_DIR/libraylib.a" platform="posix"
-    preBuildCommands "bash $PACKAGE_DIR/build-raylib.sh PLATFORM=PLATFORM_DESKTOP GRAPHICS=GRAPHICS_API_OPENGL_33" platform="posix"
+    preBuildCommands "bash $PACKAGE_DIR/clib.sh build PLATFORM=PLATFORM_DESKTOP GRAPHICS=GRAPHICS_API_OPENGL_33" platform="posix"
 }
 
 configuration "desktop-gl21" {
     lflags "-L$PACKAGE_DIR" "$PACKAGE_DIR/libraylib.a" platform="posix"
-    preBuildCommands "bash $PACKAGE_DIR/build-raylib.sh PLATFORM=PLATFORM_DESKTOP GRAPHICS=GRAPHICS_API_OPENGL_21" platform="posix"
+    preBuildCommands "bash $PACKAGE_DIR/clib.sh build PLATFORM=PLATFORM_DESKTOP GRAPHICS=GRAPHICS_API_OPENGL_21" platform="posix"
 }
 
 configuration "desktop-gles2" {
     lflags "-L$PACKAGE_DIR" "$PACKAGE_DIR/libraylib.a" platform="posix"
-    preBuildCommands "bash $PACKAGE_DIR/build-raylib.sh PLATFORM=PLATFORM_DESKTOP GRAPHICS=GRAPHICS_API_OPENGL_ES2" platform="posix"
+    preBuildCommands "bash $PACKAGE_DIR/clib.sh build PLATFORM=PLATFORM_DESKTOP GRAPHICS=GRAPHICS_API_OPENGL_ES2" platform="posix"
 }
 
 configuration "drm-gles2" {
     lflags "-L$PACKAGE_DIR" "$PACKAGE_DIR/libraylib.a" platform="posix"
-    preBuildCommands "bash $PACKAGE_DIR/build-raylib.sh PLATFORM=PLATFORM_DRM GRAPHICS=GRAPHICS_API_OPENGL_ES2" platform="posix"
+    preBuildCommands "bash $PACKAGE_DIR/clib.sh build PLATFORM=PLATFORM_DRM GRAPHICS=GRAPHICS_API_OPENGL_ES2" platform="posix"
 }
 
 configuration "windows" {
