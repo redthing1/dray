@@ -18,7 +18,7 @@ function Ensure-Command($cmdname) {
         Write-Error "Please install $cmdname and try again"
         exit 1
     }
-    Write-PROJECT "$cmdname is available"
+    Write-Host "$cmdname is available"
 }
 
 # Ensure all required commands are available
@@ -27,19 +27,19 @@ Ensure-Command "cmake"
 
 # Function to prepare the source
 function Prepare-Source {
-    Write-PROJECT "[$PROJECT] preparing $LIB_NAME source..."
+    Write-Host "[$PROJECT] preparing $LIB_NAME source..."
     Set-Location $PACKAGE_DIR
     
     if (Test-Path $SOURCETREE_DIR) {
-        Write-PROJECT "[$PROJECT] source folder already exists, using it."
+        Write-Host "[$PROJECT] source folder already exists, using it."
     } else {
-        Write-PROJECT "[$PROJECT] getting source to build $LIB_NAME"
+        Write-Host "[$PROJECT] getting source to build $LIB_NAME"
         git clone --depth 1 --branch $SOURCETREE_BRANCH $SOURCETREE_URL $SOURCETREE_DIR
     }
 
     Set-Location $SOURCETREE_DIR
     git submodule update --init --recursive
-    Write-PROJECT "[$PROJECT] finished preparing $LIB_NAME source"
+    Write-Host "[$PROJECT] finished preparing $LIB_NAME source"
 }
 
 # Function to build the library
@@ -74,7 +74,7 @@ function Main {
             Build-Library 
         }
         default {
-            Write-PROJECT "Usage: .\script.ps1 [prepare|build] [build arguments...]"
+            Write-Host "Usage: .\script.ps1 [prepare|build] [build arguments...]"
             exit 1
         }
     }
