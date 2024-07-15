@@ -6,5 +6,5 @@ license "proprietary"
 dependency "dray" path=".."
 
 # platform specific linker flags
-lflags "WinMM.lib" "OLDNAMES.lib" "MSVCRT.lib" platform="windows"
+lflags "WinMM.lib" "OLDNAMES.lib" "MSVCRT.lib" "gdi32.lib" platform="windows"
 lflags "-lglew" "-lglfw" "-framework" "OpenGL" "-L/opt/homebrew/lib" platform="osx"
