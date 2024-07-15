@@ -6,10 +6,7 @@ license "apache-2.0"
 dependency "fluent-asserts" version="~>0.13.3"
 targetType "library"
 
-# on windows platforms, link to raylib static library and dependencies
-lflags "WinMM.lib" "OLDNAMES.lib" "MSVCRT.lib" "$PACKAGE_DIR/raylib.lib" "$PACKAGE_DIR/*.lib $PACKAGE_DIR/glfw3_mt.lib" "user32.lib" "gdi32.lib" platform="windows"
-
-# on posix platforms, link to raylib static library
+lflags "$PACKAGE_DIR/raylib.lib" "$PACKAGE_DIR/*.lib $PACKAGE_DIR/glfw3_mt.lib" platform="windows"
 lflags "-L$PACKAGE_DIR" "$PACKAGE_DIR/libraylib.a" platform="posix"
 
 preGenerateCommands "bash $PACKAGE_DIR/clib.sh prepare" platform="posix"
