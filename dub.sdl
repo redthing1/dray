@@ -6,8 +6,9 @@ license "apache-2.0"
 dependency "fluent-asserts" version="~>0.13.3"
 targetType "library"
 
-lflags "$PACKAGE_DIR/raylib.lib" "$PACKAGE_DIR/glfw3_mt.lib" platform="windows"
-lflags "-L$PACKAGE_DIR" "$PACKAGE_DIR/libraylib.a" platform="posix"
+lflags "$PACKAGE_DIR/raylib.lib" "$PACKAGE_DIR/glfw3_mt.lib" "WinMM.lib" "OLDNAMES.lib" "MSVCRT.lib" "user32.lib" "gdi32.lib" platform="windows"
+lflags "-lglew" "-lglfw" "-framework" "OpenGL" "-L/opt/homebrew/lib" "-L$PACKAGE_DIR" "$PACKAGE_DIR/libraylib.a" platform="osx"
+lflags "-L$PACKAGE_DIR" "$PACKAGE_DIR/libraylib.a" platform="linux"
 
 preGenerateCommands "bash $PACKAGE_DIR/clib.sh prepare" platform="posix"
 
