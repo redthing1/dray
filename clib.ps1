@@ -18,7 +18,7 @@ function Ensure-Command($cmdname) {
         Write-Error "Please install $cmdname and try again"
         exit 1
     }
-    Write-Host "$cmdname is available"
+    # Write-Host "$cmdname is available"
 }
 
 # Ensure all required commands are available
